@@ -86,7 +86,7 @@ Yêu cầu: Python 3.10+ và [Poetry](https://python-poetry.org/).
 
 ```bash
 # 1. Clone dự án
-git clone https://github.com/your-username/mirae-automation.git
+git clone https://github.com/NDPhuu/mirae-automation.git
 
 # 2. Cài đặt thư viện
 poetry install
