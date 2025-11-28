@@ -25,10 +25,10 @@ Hệ thống hoạt động theo cơ chế **Human-in-the-loop**:
 Hệ thống tự động kết nối API DNSE, lấy dữ liệu VN-Index, Thanh khoản (Khối lượng/Giá trị) và Độ rộng thị trường (Số mã Tăng/Giảm/Trần/Sàn) chỉ với 1 cú click.
 
 *(Ảnh: Trạng thái cập nhập dữ liệu)*
-![Updating Data from DNSE](D:\WORKS\Project\mirae-automation\prj_img\Updated_Data.png)
+![Updating Data from DNSE](prj_img/Updated_Data.png)
 
 *(Ảnh: Màn hình tổng quan số liệu)*
-![Market Overview](D:\WORKS\Project\mirae-automation\prj_img\Market_Overview.png) 
+![Market Overview](prj_img/Market_Overview.png) 
 
 ### 📊 Phân tích Dòng tiền & Nhóm ngành
 Logic thông minh tự động tính toán:
@@ -36,13 +36,13 @@ Logic thông minh tự động tính toán:
 *   **Hiệu suất Ngành:** Tự động gom nhóm cổ phiếu (Bank, Chứng, Thép...) và đánh giá trạng thái (Tích cực/Tiêu cực/Phân hóa).
 
 *(Ảnh: Phân tích chi tiết)*
-![Detailed Analysis](D:\WORKS\Project\mirae-automation\prj_img\Detailed_Analysis.png)
+![Detailed Analysis](prj_img/Detailed_Analysis.png)
 
 ### 🤖 Human Input & AI Generation
 Khu vực dành cho chuyên gia nhập liệu các chỉ số nâng cao (P/E, Technical Score) và nhận định nhanh. Sau đó AI sẽ tổng hợp tất cả để viết bài.
 
 *(Ảnh: Nhập liệu chuyên gia)*
-![Human Input](D:\WORKS\Project\mirae-automation\prj_img\Human_Input.png)
+![Human Input](prj_img/Human_Input.png)
 
 ---
 
