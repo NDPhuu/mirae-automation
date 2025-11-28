@@ -99,7 +99,8 @@ poetry install
 
 # 4. Chạy ứng dụng
 poetry run streamlit run src/ui/dashboard.py
-
+```
 ---
 
-## ***Disclaimer: Dự án này là công cụ hỗ trợ cá nhân, không phải sản phẩm chính thức của Mirae Asset hay DNSE.***
+## Disclaimer: 
+***Dự án này là công cụ hỗ trợ cá nhân, không phải sản phẩm chính thức của Mirae Asset hay DNSE.***
