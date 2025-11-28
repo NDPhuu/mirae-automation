@@ -27,6 +27,8 @@ Hệ thống tự động kết nối API DNSE, lấy dữ liệu VN-Index, Than
 *(Ảnh: Trạng thái cập nhập dữ liệu)*
 ![Updating Data from DNSE](prj_img/Updated_Data.png)
 
+---
+
 *(Ảnh: Màn hình tổng quan số liệu)*
 ![Market Overview](prj_img/Market_Overview.png) 
 
