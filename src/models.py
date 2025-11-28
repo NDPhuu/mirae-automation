@@ -15,6 +15,7 @@ class MarketIndex(BaseModel):
     point: float
     change_point: float
     change_percent: float
+    total_volume: int = 0 # Khối lượng giao dịch (Triệu đồng)
     total_value: float # Giá trị giao dịch (Tỷ đồng)
     breadth: MarketBreadth
 

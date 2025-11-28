@@ -103,6 +103,7 @@ class DNSEService:
                         change_point=payload.get("changedValue"),
                         change_percent=payload.get("changedRatio"),
                         total_value=payload.get("grossTradeAmount"),
+                        total_volume=payload.get("totalVolumeTraded", 0),
                         breadth=breadth
                     )
                     print("✅ Got VN-Index")
