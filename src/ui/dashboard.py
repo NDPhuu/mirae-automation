@@ -73,12 +73,20 @@ def main():
             st.subheader("1. Tổng quan thị trường (Market Overview)")
             c1, c2, c3 = st.columns(3)
             with c1:
-                st.metric("VN-Index", f"{data.index.point}", f"{data.index.change_point} ({data.index.change_percent}%)")
+                st.metric("VN-Index", f"{data.index.point}", f"{data.index.change_point:+.2f} ({data.index.change_percent:+.2f}%)")
             with c2:
-                val_ty = data.index.total_value / 1_000_000_000
-                st.metric("Thanh khoản", f"{val_ty:,.0f} Tỷ")
+                if data.index.total_value > 1_000_000_000:
+                    val_ty = data.index.total_value / 1_000_000_000
+                    st.metric("Thanh khoản", f"{val_ty:,.0f} Tỷ")
+                else:
+                    st.metric("Thanh khoản", f"{data.index.total_value:,.2f} Triệu")
             with c3:
-                st.metric("Độ rộng", f"🟢{data.index.breadth.green} / 🔴{data.index.breadth.red}")
+                total_green = data.index.breadth.green + data.index.breadth.ceiling
+                total_red = data.index.breadth.red + data.index.breadth.floor
+                
+                # Hiển thị chi tiết trong tooltip
+                tooltip = f"Tăng: {data.index.breadth.green} (Trần {data.index.breadth.ceiling}) \nGiảm: {data.index.breadth.red} (Sàn {data.index.breadth.floor})"
+                st.metric("Độ rộng", f"🟢{total_green} / 🔴{total_red}", help=tooltip)
 
             # Input chỉnh sửa nhận định thanh khoản
             data.liquidity_comment = st.text_input("Nhận xét Thanh khoản:", value="Thấp hơn trung bình 20 phiên")
