@@ -19,7 +19,7 @@ Hệ thống hoạt động theo cơ chế **Human-in-the-loop**:
 
 ## 2. Demo Sản phẩm (Prototype Showcase)
 
-**Phiên bản hiện tại:** `v1.0.0 (MVP)`
+**Phiên bản hiện tại:** `v1.1.0 (MVP)`
 
 ### 📸 Giao diện Dashboard & Tổng quan thị trường
 Hệ thống tự động kết nối API DNSE, lấy dữ liệu VN-Index, Thanh khoản (Khối lượng/Giá trị) và Độ rộng thị trường (Số mã Tăng/Giảm/Trần/Sàn) chỉ với 1 cú click.
