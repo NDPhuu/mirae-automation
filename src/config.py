@@ -8,16 +8,23 @@ VERSION = "1.0.0"
 # Đây là logic "Bán tự động" mà chúng ta đã bàn.
 # Bạn có thể thêm bớt mã tùy theo quan điểm của Mirae Asset.
 SECTOR_MAPPING = {
-    "Ngân hàng": ["VCB", "BID", "CTG", "MBB", "ACB", "TCB", "VPB", "STB"],
-    "Chứng khoán": ["SSI", "VND", "VCI", "HCM", "MBS", "SHS", "FTS"],
-    "Bất động sản": ["VHM", "VIC", "VRE", "NVL", "PDR", "DIG", "DXG", "KDH"],
-    "Thép": ["HPG", "HSG", "NKG"],
-    "Dầu khí": ["GAS", "PLX", "PVD", "PVS", "BSR"],
-    "Bán lẻ": ["MWG", "FRT", "DGW", "PNJ"],
-    "Thủy sản": ["VHC", "ANV", "IDI"],
-    "Khu công nghiệp": ["KBC", "IDC", "SZC", "VGC"],
-    "Đầu tư công": ["VCG", "HHV", "LCG", "KSB"]
+    "Ngân hàng":               ["VCB","CTG","BID","TCB","VPB","MBB","LPB","ACB","HDB","STB","SHB","SSB","TPB","OCB","EIB","MSB","VIB","VAB"],
+    "Chứng khoán":            ["SSI","HCM","BSI","TVB","AGR","ORS","MBS","VND","CTS","TVS"],
+    "Bảo hiểm":               ["BVH","MIG","PVI","BMI","PGI"],
+    "Bất động sản":           ["VIC","VHM","NVL","CKG","VRE","KBC","DXG","NLG","SCR","NHA","HDC","HPX","IJC","HQC","CRE","HAR","LDG"],
+    "Xây dựng & Xây dựng công trình": ["CTD","FDC","C32","PC1","LGL","BAX","COM","SC5","BCE"],
+    "Nguyên vật liệu (Thép, Xi măng)": ["HPG","HSG","NKG","BAX","SMC","LAF","HT1","SGH","TRC"],
+    "Hóa chất & Phân bón":    ["DPM","DGC","DCM","BFC","CSV"],
+    "Dệt may & Sợi":         ["TCM","DHC"],
+    "Vận tải & Logistics":     ["HVN","VJC","PVT","VSC","GMD","VOS"],
+    "Năng lượng (Dầu khí & Điện)": ["GAS","PLX","POW","NT2","PGC"],
+    "Công nghệ & Viễn thông":  ["FPT","CMC","VNG"],
+    "Tiêu dùng thiết yếu":    ["VNM","SAB","MCH","KDC","DHC","QNS","ASG"],
+    "Tiêu dùng không thiết yếu": ["MWG","FRT","PNJ"],
+    "Y tế & Dược phẩm":       ["DHG","IMP","OPC","TRA"],
+    "Nông nghiệp & Thủy sản":  ["ANV","DBC","HNG","ASM"]
 }
+
 
 # 3. CẤU HÌNH AI (PROMPT TEMPLATE)
 # Đây là prompt cơ bản (Few-shot đơn giản) dùng cho Giai đoạn 1.

@@ -22,7 +22,11 @@ class MarketLogic:
             for sym in symbols:
                 data = stock_data_dict.get(sym)
                 if data:
-                    change = data.get("change_percent", 0.0)
+                    # --- FIX: Xử lý an toàn cho change_percent ---
+                    raw_change = data.get("change_percent")
+                    change = float(raw_change) if raw_change is not None else 0.0
+                    # ---------------------------------------------
+                    
                     sector_stocks.append({"symbol": sym, "change": change})
                     total_change += change
                     count += 1
@@ -51,7 +55,7 @@ class MarketLogic:
                 name=sector_name,
                 avg_change=round(avg_change, 2),
                 top_gainers=top_gainers,
-                top_losers=top_losers, # Sẽ fix logic hiển thị sau
+                top_losers=top_losers,
                 status=status
             ))
             
@@ -60,24 +64,48 @@ class MarketLogic:
 
     def get_top_impact(self, stock_data_dict: Dict[str, dict]) -> (List[str], List[str]):
         """
-        Tìm Top mã tăng/giảm mạnh nhất trong danh sách theo dõi.
-        (Tạm thời dùng % thay vì điểm đóng góp vì API chưa có điểm đóng góp)
+        Tìm Top mã tác động.
+        FIX: Sử dụng trọng số (Giá trị giao dịch * % Thay đổi) để ưu tiên Bluechip.
+        Đã thêm cơ chế xử lý lỗi NoneType.
         """
         all_stocks = []
         for sym, data in stock_data_dict.items():
+            # --- ĐOẠN CODE FIX LỖI ---
+            # Lấy dữ liệu thô
+            raw_change = data.get("change_percent")
+            raw_price = data.get("price")
+            raw_volume = data.get("volume")
+
+            # Ép kiểu an toàn (Safe Casting): Nếu None thì về 0.0
+            try:
+                change = float(raw_change) if raw_change is not None else 0.0
+                price = float(raw_price) if raw_price is not None else 0.0
+                volume = float(raw_volume) if raw_volume is not None else 0.0
+            except (ValueError, TypeError):
+                # Trường hợp dữ liệu bị lỗi format lạ, gán về 0 để không crash app
+                change, price, volume = 0.0, 0.0, 0.0
+            # -------------------------
+            
+            # Công thức ước lượng sức mạnh tác động:
+            trading_value = price * volume
+            impact_score = change * trading_value 
+
             all_stocks.append({
                 "symbol": sym,
-                "change": data.get("change_percent", 0.0),
-                "price": data.get("price", 0)
+                "change": change,
+                "score": impact_score
             })
             
-        # Sắp xếp
-        sorted_stocks = sorted(all_stocks, key=lambda x: x["change"], reverse=True)
+        # Sắp xếp theo Impact Score thay vì chỉ theo % Change
+        sorted_stocks = sorted(all_stocks, key=lambda x: x["score"], reverse=True)
         
-        # Top 3 Tăng
-        positive = [f"{s['symbol']} (+{s['change']}%)" for s in sorted_stocks[:3]]
-        # Top 3 Giảm (Lấy cuối danh sách)
-        negative = [f"{s['symbol']} ({s['change']}%)" for s in sorted_stocks[-3:]]
+        # Top 3 Tích cực (Score cao nhất)
+        positive = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[:3] if s['score'] > 0]
+        
+        # Top 3 Tiêu cực (Score thấp nhất - âm nhiều nhất)
+        negative = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[-3:] if s['score'] < 0]
+        # Đảo ngược lại để mã giảm mạnh nhất đứng đầu list tiêu cực
+        negative.reverse() 
         
         return positive, negative
 
@@ -98,17 +126,14 @@ class MarketLogic:
         pos_impact, neg_impact = self.get_top_impact(stocks_dict)
         
         # 3. Tạo Object kết quả
-        # Lưu ý: Các trường như 'liquidity_comment', 'technical_score' 
-        # sẽ được UI điền vào sau (Human-in-the-loop). Ở đây ta để giá trị mặc định.
-        
         return DailyReportInput(
-            date="Hôm nay", # Sẽ lấy ngày hiện tại
+            date="Hôm nay", 
             index=index_data,
             liquidity_comment="Chờ nhận định...",
             impact_positive=pos_impact,
             impact_negative=neg_impact,
             sectors=sectors,
-            foreign=ForeignTrading(status="N/A", net_value=0, top_buy=[], top_sell=[]), # Placeholder
+            foreign=ForeignTrading(status="N/A", net_value=0, top_buy=[], top_sell=[]), 
             technical_score=0,
             technical_rating="N/A",
             pe_ratio=0.0,
