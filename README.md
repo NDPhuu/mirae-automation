@@ -50,7 +50,7 @@ Khu vực dành cho chuyên gia nhập liệu các chỉ số nâng cao (P/E, Te
 
 ## 3. Trạng thái phát triển (Current Status)
 
-Dự án đang ở giai đoạn **MVP (Minimum Viable Product)** và đã hoạt động ổn định các tính năng cốt lõi:
+Dự án đang ở giai đoạn **Prototype** và đã hoạt động ổn định một số tính năng cốt lõi như:
 
 *   ✅ **Data Source:** Kết nối trực tiếp **DNSE API** (thông qua giao thức MQTT/WebSocket) để lấy dữ liệu Snapshot thời gian thực.
 *   ✅ **Data Processing:**
@@ -58,7 +58,6 @@ Dự án đang ở giai đoạn **MVP (Minimum Viable Product)** và đã hoạt
     *   Tính toán độ rộng thị trường (Gộp mã Trần vào Tăng, Sàn vào Giảm).
     *   Thuật toán Ranking cổ phiếu tác động (Impact Score).
 *   ✅ **User Interface:** Giao diện Streamlit tương tác, cho phép chỉnh sửa số liệu trước khi tạo báo cáo.
-*   ✅ **AI Engine:** Tích hợp **Google Gemini (Pro/Flash)** để sinh văn bản tự động.
 
 ---
 
@@ -72,12 +71,6 @@ Kế hoạch nâng cấp hệ thống trong thời gian tới để tối ưu h�
 *   [ ] **Biểu đồ kỹ thuật:** Tự động vẽ và chèn ảnh Chart VN-Index vào báo cáo.
 *   [ ] **Quản lý cấu hình:** Cho phép người dùng tự thêm/bớt mã vào danh sách theo dõi ngành ngay trên giao diện.
 
-### 🧠 Tầm nhìn dài hạn (Future Vision - RAG & Local LLM)
-Chuyển đổi từ mô hình gọi API sang mô hình **AI Local** để bảo mật dữ liệu tuyệt đối và học văn phong đặc thù.
-*   **Local Model:** Triển khai **Ollama (Llama 3 / Vinallama)** chạy offline trên máy cá nhân.
-*   **RAG (Retrieval-Augmented Generation):**
-    *   Xây dựng kho tri thức từ hàng trăm file PDF báo cáo cũ.
-    *   Giúp AI "nhớ" lại bối cảnh thị trường các phiên trước và bắt chước giọng văn (Tone & Voice) chính xác của Mirae Asset.
 
 ---
 
