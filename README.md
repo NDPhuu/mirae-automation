@@ -66,7 +66,7 @@ Dự án đang ở giai đoạn **Prototype** và đã hoạt động ổn đị
 Kế hoạch nâng cấp hệ thống trong thời gian tới để tối ưu hóa khả năng phân tích và bảo mật.
 
 ### 🚀 Giai đoạn sắp tới (Next Steps)
-*   [ ] **AI Engine:** Hoàn thiện kiến trúc RAG, sử dụng Model Embedding (Nomic-Embed-Text), lưu trữ thông qua LanceDB, vàtích hợp **Qwen 3.5** để sinh văn bản tự động.
+*   [ ] **AI Engine:** Hoàn thiện kiến trúc RAG, sử dụng Model Embedding (Nomic-Embed-Text), lưu trữ thông qua LanceDB, và tích hợp **Qwen 3.5** để sinh văn bản tự động.
 *   [ ] **Export to Docx:** Xuất báo cáo ra file Word (.docx) theo đúng Template chuẩn của công ty (Header, Footer, Logo).
 *   [ ] **Biểu đồ kỹ thuật:** Tự động vẽ và chèn ảnh Chart VN-Index vào báo cáo.
 *   [ ] **Quản lý cấu hình:** Cho phép người dùng tự thêm/bớt mã vào danh sách theo dõi ngành ngay trên giao diện.
