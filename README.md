@@ -4,8 +4,8 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
-![AI](https://img.shields.io/badge/AI-Google%20Gemini-orange)
-![Status](https://img.shields.io/badge/Status-MVP%20Prototype-green)
+![AI](https://img.shields.io/badge/Qwen3.5-orange)
+![Status](https://img.shields.io/badge/Status-Prototype%20-green)
 
 ## 1. Giới thiệu (Introduction)
 Dự án được xây dựng nhằm giải quyết bài toán "nỗi đau" của chuyên viên phân tích: mất quá nhiều thời gian để thu thập dữ liệu từ nhiều nguồn (Bảng giá, FireAnt, HOSE) và viết đi viết lại các mẫu câu nhận định thị trường.
@@ -13,7 +13,7 @@ Dự án được xây dựng nhằm giải quyết bài toán "nỗi đau" củ
 Hệ thống hoạt động theo cơ chế **Human-in-the-loop**:
 1.  **Auto Fetch:** Tự động lấy dữ liệu thị trường, tính toán chỉ số ngành, dòng tiền.
 2.  **Human Review:** Chuyên viên kiểm tra, chỉnh sửa các nhận định định tính.
-3.  **AI Write:** Sử dụng LLM (Google Gemini) để viết báo cáo hoàn chỉnh theo văn phong chuyên nghiệp.
+3.  **AI Write:** Sử dụng LLM (Qwen 3.5) để viết báo cáo hoàn chỉnh theo văn phong chuyên nghiệp.
 
 ---
 
@@ -67,6 +67,7 @@ Dự án đang ở giai đoạn **MVP (Minimum Viable Product)** và đã hoạt
 Kế hoạch nâng cấp hệ thống trong thời gian tới để tối ưu hóa khả năng phân tích và bảo mật.
 
 ### 🚀 Giai đoạn sắp tới (Next Steps)
+*   [ ] **AI Engine:** Hoàn thiện kiến trúc RAG, sử dụng Model Embedding (Nomic-Embed-Text), lưu trữ thông qua LanceDB, vàtích hợp **Qwen 3.5** để sinh văn bản tự động.
 *   [ ] **Export to Docx:** Xuất báo cáo ra file Word (.docx) theo đúng Template chuẩn của công ty (Header, Footer, Logo).
 *   [ ] **Biểu đồ kỹ thuật:** Tự động vẽ và chèn ảnh Chart VN-Index vào báo cáo.
 *   [ ] **Quản lý cấu hình:** Cho phép người dùng tự thêm/bớt mã vào danh sách theo dõi ngành ngay trên giao diện.
