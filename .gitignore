@@ -4,3 +4,8 @@ __pycache__/
 *.pyc
 .DS_Store
 .vscode/
+data_pdfs/
+simple_download.py
+process_pdfs.py
+data_clean_txt/
+source.txt
