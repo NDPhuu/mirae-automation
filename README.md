@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
-![AI](https://img.shields.io/badge/Qwen3.5-orange)
+![AI](https://img.shields.io/badge/AI-Qwen3.5-orange)
 ![Status](https://img.shields.io/badge/Status-Prototype%20-green)
 
 ## 1. Giới thiệu (Introduction)
