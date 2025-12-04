@@ -5,9 +5,6 @@ __pycache__/
 .DS_Store
 .vscode/
 data_pdfs/
-simple_download.py
-process_pdfs.py
 data_clean_txt/
-source.txt
-check_models.py
-test_intergration.py
+non_relevant/
+prj_img/
