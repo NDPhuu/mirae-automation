@@ -9,3 +9,5 @@ simple_download.py
 process_pdfs.py
 data_clean_txt/
 source.txt
+check_models.py
+test_intergration.py
