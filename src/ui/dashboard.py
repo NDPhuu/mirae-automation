@@ -79,7 +79,7 @@ def main():
                 
             # Cột 3: Giá trị (Value) - QUAN TRỌNG
             with c3:
-                val_billion = data.index.total_value / 1_000_000_000
+                val_billion = data.index.total_value
                 val_str = "N/A" if val_billion == 0 else f"{val_billion:,.0f}"
                 st.metric("Giá trị GD", f"{val_str} Tỷ", help="Tổng giá trị khớp lệnh + thỏa thuận sàn HSX")
             
