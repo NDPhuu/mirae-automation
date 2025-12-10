@@ -34,7 +34,7 @@ Nhiệm vụ: Viết mục "NHẬN ĐỊNH THỊ TRƯỜNG" cho bản tin cuối
 DỮ LIỆU ĐẦU VÀO (PHIÊN HÔM NAY):
 - Ngày: {date}
 - VN-Index: {vnindex_point} (Thay đổi: {vnindex_change} điểm, {vnindex_percent}%)
-- Thanh khoản: {liquidity_volume} triệu cổ phiếu tương ứng với {liquidity_value} tỷ đồng. (Nhận xét: {liquidity_comment})
+- Thanh khoản: {liquidity_volume/1_000_000:.0f} triệu cổ phiếu tương ứng với {liquidity_value:.0f} tỷ đồng. (Nhận xét: {liquidity_comment})
 - Độ rộng: {breadth_green} Tăng / {breadth_red} Giảm / {breadth_yellow} Tham chiếu.
 - Top Tác động Tích cực (+): {impact_positive}
 - Top Tác động Tiêu cực (-): {impact_negative}
