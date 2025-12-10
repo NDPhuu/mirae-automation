@@ -103,13 +103,31 @@ def main():
                 st.text_area("Top Tác động Tiêu cực (-)", value=", ".join(data.impact_negative), height=100)
 
             st.write("📊 **Diễn biến Nhóm ngành:**")
-            sector_df = pd.DataFrame([
-                {"Ngành": s.name, "Trạng thái": s.status, "% TB": s.avg_change, "Mã Top": ", ".join(s.top_gainers)}
-                for s in data.sectors
-            ])
-            st.dataframe(sector_df, hide_index=True)
+            # --- SỬA ĐOẠN NÀY ---
+            sector_rows = []
+            for s in data.sectors:
+                # Logic thông minh:
+                # - Nếu ngành Tăng (avg_change > 0): Hiện mã Tăng (top_gainers)
+                # - Nếu ngành Giảm (avg_change < 0): Hiện mã Giảm (top_losers)
+                # - Nếu không có mã Tăng/Giảm tương ứng thì lấy mã còn lại
+                
+                if s.avg_change >= 0:
+                    # Ưu tiên hiện mã tăng, nếu không có thì hiện mã giảm
+                    stocks_show = s.top_gainers if s.top_gainers else s.top_losers
+                else:
+                    # Ưu tiên hiện mã giảm, nếu không có thì hiện mã tăng
+                    stocks_show = s.top_losers if s.top_losers else s.top_gainers
+                
+                sector_rows.append({
+                    "Ngành": s.name, 
+                    "Trạng thái": s.status, 
+                    "% TB": f"{s.avg_change:+.2f}%", # Thêm dấu +/- cho đẹp
+                    "Mã Tiêu biểu": ", ".join(stocks_show)
+                })
 
-            st.markdown("---")
+            sector_df = pd.DataFrame(sector_rows)
+            st.dataframe(sector_df, hide_index=True, use_container_width=True)
+            # --------------------
 
             # --- SECTION 3: KHỐI NGOẠI ---
             st.subheader("3. Giao dịch Khối ngoại")
