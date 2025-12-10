@@ -7,3 +7,4 @@ __pycache__/
 data_pdfs/
 data_clean_txt/
 non_relevant/
+chroma_db/
