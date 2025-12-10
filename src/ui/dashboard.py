@@ -60,23 +60,31 @@ def main():
         data = st.session_state.report_data
         
         with st.form("report_form"):
-            # --- SECTION 1: TỔNG QUAN ---
+            # --- SECTION 1: TỔNG QUAN (CHIA 4 CỘT) ---
             st.subheader("1. Tổng quan thị trường (Market Overview)")
-            c1, c2, c3 = st.columns(3)
             
+            # Thay đổi: Chia thành 4 cột để hiển thị Giá trị riêng
+            c1, c2, c3, c4 = st.columns(4)
+            
+            # Cột 1: Điểm số
             with c1:
                 change_str = f"{data.index.change_point:+.2f}"
                 percent_str = f"{data.index.change_percent:.2f}%"
                 st.metric("VN-Index", f"{data.index.point:.2f}", f"{change_str} ({percent_str})")
             
+            # Cột 2: Khối lượng (Volume)
             with c2:
                 vol_million = data.index.total_volume / 1_000_000
-                vol_str = f"{vol_million:,.2f} Tr CP"
-                val_billion = data.index.total_value / 1_000_000_000
-                val_str = "N/A Tỷ" if val_billion == 0 else f"{val_billion:,.0f} Tỷ"
-                st.metric("Thanh khoản (KL / GT)", vol_str, delta=val_str, delta_color="off")
-            
+                st.metric("Khối lượng", f"{vol_million:,.2f} Tr CP")
+                
+            # Cột 3: Giá trị (Value) - QUAN TRỌNG
             with c3:
+                val_billion = data.index.total_value / 1_000_000_000
+                val_str = "N/A" if val_billion == 0 else f"{val_billion:,.0f}"
+                st.metric("Giá trị GD", f"{val_str} Tỷ", help="Tổng giá trị khớp lệnh + thỏa thuận sàn HSX")
+            
+            # Cột 4: Độ rộng
+            with c4:
                 total_green = data.index.breadth.green + data.index.breadth.ceiling
                 total_red = data.index.breadth.red + data.index.breadth.floor
                 tooltip = f"Tăng: {data.index.breadth.green} (Trần {data.index.breadth.ceiling}) \nGiảm: {data.index.breadth.red} (Sàn {data.index.breadth.floor})"
@@ -103,15 +111,10 @@ def main():
 
             st.markdown("---")
 
-            # --- SECTION 3: KHỐI NGOẠI (MỚI THÊM) ---
+            # --- SECTION 3: KHỐI NGOẠI ---
             st.subheader("3. Giao dịch Khối ngoại")
             c_f1, c_f2 = st.columns([1, 2])
             with c_f1:
-                # Hiển thị trạng thái Mua/Bán ròng
-                f_color = "normal"
-                if data.foreign.status == "MUA RÒNG": f_color = "normal" # Xanh (mặc định)
-                else: f_color = "inverse" # Đỏ (nếu Streamlit hỗ trợ, hoặc dùng delta)
-                
                 st.metric(
                     label="Trạng thái", 
                     value=data.foreign.status, 
