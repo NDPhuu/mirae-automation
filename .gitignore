@@ -8,3 +8,4 @@ data_pdfs/
 data_clean_txt/
 non_relevant/
 chroma_db/
+process_pdfs.py
