@@ -30,13 +30,14 @@ class AIEngine:
                 vnindex_point=data.index.point,
                 vnindex_change=data.index.change_point,
                 vnindex_percent=data.index.change_percent,
+                liquidity_volume = f"{data.index.total_volume:,.0f}",
                 liquidity_value=f"{data.index.total_value:,.2f}",
                 liquidity_comment=data.liquidity_comment,
                 
                 # Độ rộng thị trường
                 breadth_green=data.index.breadth.green + data.index.breadth.ceiling, # Cộng cả trần
                 breadth_red=data.index.breadth.red + data.index.breadth.floor,       # Cộng cả sàn
-                breadth_yellow=data.index.breadth.yellow, # <--- MỚI THÊM
+                breadth_yellow=data.index.breadth.yellow,
                 
                 # Khối ngoại
                 foreign_status=data.foreign.status,
