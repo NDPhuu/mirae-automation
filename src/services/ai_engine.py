@@ -16,7 +16,7 @@ class AIEngine:
             self.model = None
         else:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         # Khởi tạo RAG
         self.rag = RAGService()
