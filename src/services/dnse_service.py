@@ -115,7 +115,9 @@ class DNSEService:
                         self._temp_data["stocks"][symbol] = {
                             "price": payload.get("closePrice"),
                             "change_percent": payload.get("changedRatio", 0.0),
-                            "volume": payload.get("totalVolumeTraded", 0)
+                            "volume": payload.get("totalVolumeTraded", 0),
+                            "f_buy_val": payload.get("buyForeignValue", 0.0),  # Giá trị Tây mua
+                            "f_sell_val": payload.get("sellForeignValue", 0.0) # Giá trị Tây bán
                         }
                         # print(f"   -> Got {symbol}") # Uncomment nếu muốn debug chi tiết
 

@@ -81,6 +81,43 @@ class MarketLogic:
         
         return positive, negative
 
+    def analyze_foreign(self, stock_data_dict: Dict[str, dict]) -> ForeignTrading:
+        """
+        Tính toán giao dịch khối ngoại từ dữ liệu chi tiết từng mã.
+        """
+        total_net_value = 0.0
+        foreign_stats = []
+
+        for sym, data in stock_data_dict.items():
+            buy_val = data.get("f_buy_val", 0.0) or 0.0
+            sell_val = data.get("f_sell_val", 0.0) or 0.0
+            
+            # Tính giá trị ròng (Tỷ đồng)
+            net_val = (buy_val - sell_val)
+            
+            if net_val != 0:
+                total_net_value += net_val
+                foreign_stats.append({"symbol": sym, "net": net_val})
+
+        # Sắp xếp
+        sorted_foreign = sorted(foreign_stats, key=lambda x: x["net"], reverse=True)
+        
+        # Top Mua ròng (Dương lớn nhất)
+        top_buy = [f"{s['symbol']} (+{s['net']:.0f} tỷ)" for s in sorted_foreign[:3] if s['net'] > 0]
+        
+        # Top Bán ròng (Âm lớn nhất - nằm cuối list)
+        top_sell = [f"{s['symbol']} (-{abs(s['net']):.0f} tỷ)" for s in sorted_foreign[-3:] if s['net'] < 0]
+        
+        # Trạng thái
+        status = "MUA RÒNG" if total_net_value > 0 else "BÁN RÒNG"
+        
+        return ForeignTrading(
+            status=status,
+            net_value=round(abs(total_net_value), 2), # Lấy trị tuyệt đối để hiển thị
+            top_buy=top_buy,
+            top_sell=top_sell
+        )
+
     def prepare_report_input(self, raw_data: Dict) -> DailyReportInput:
         """
         Hàm tổng hợp cuối cùng: Biến dữ liệu thô thành Object sạch sẽ cho AI.
@@ -100,7 +137,8 @@ class MarketLogic:
         # 3. Tạo Object kết quả
         # Lưu ý: Các trường như 'liquidity_comment', 'technical_score' 
         # sẽ được UI điền vào sau (Human-in-the-loop). Ở đây ta để giá trị mặc định.
-        
+        foreign_data = self.analyze_foreign(stocks_dict)
+
         return DailyReportInput(
             date="Hôm nay", # Sẽ lấy ngày hiện tại
             index=index_data,
@@ -108,7 +146,7 @@ class MarketLogic:
             impact_positive=pos_impact,
             impact_negative=neg_impact,
             sectors=sectors,
-            foreign=ForeignTrading(status="N/A", net_value=0, top_buy=[], top_sell=[]), # Placeholder
+            foreign=foreign_data,
             technical_score=0,
             technical_rating="N/A",
             pe_ratio=0.0,
