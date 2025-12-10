@@ -34,7 +34,7 @@ Nhiệm vụ: Viết mục "NHẬN ĐỊNH THỊ TRƯỜNG" cho bản tin cuối
 DỮ LIỆU ĐẦU VÀO (PHIÊN HÔM NAY):
 - Ngày: {date}
 - VN-Index: {vnindex_point} (Thay đổi: {vnindex_change} điểm, {vnindex_percent}%)
-- Thanh khoản: {liquidity_value} tỷ đồng. (Nhận xét: {liquidity_comment})
+- Thanh khoản: {liquidity_volume} triệu cổ phiếu tương ứng với {liquidity_value} tỷ đồng. (Nhận xét: {liquidity_comment})
 - Độ rộng: {breadth_green} Tăng / {breadth_red} Giảm / {breadth_yellow} Tham chiếu.
 - Top Tác động Tích cực (+): {impact_positive}
 - Top Tác động Tiêu cực (-): {impact_negative}
@@ -56,7 +56,7 @@ Khối ngoại bán ròng phiên thứ 6 liên tiếp với giá trị 337 tỷ 
 Phiên giảm điểm khiến điểm số kỹ thuật giảm từ mức -2 xuống -5, thể hiện trạng thái TIÊU CỰC. Hệ số P/E hiện đạt 13.3x.
 
 <Ví dụ 2: Thị trường Tăng điểm>
-Tiêu đề: Chạm đỉnh mới
+Tiêu đề: Tiến về đỉnh mới
 VN-Index có phiên giao dịch đầy khởi sắc khi sắc xanh bao trùm. Nhờ lực đẩy từ bộ ba ngân hàng – chứng khoán – thép, chỉ số đóng cửa ở mức cao mới, tăng 10,95 điểm (+0,82%). Thanh khoản cải thiện, tăng hơn 20% so với phiên trước.
 Xét về độ rộng, thị trường nghiêng về số mã tăng với 195 mã xanh và 119 mã đỏ. Nhóm chứng khoán là tâm điểm với nhiều mã bứt phá như VND, MBS. Bên cạnh đó, nhóm bán lẻ và bất động sản cũng góp phần củng cố sắc xanh.
 Khối ngoại tạo điểm tích cực khi quay lại mua ròng 908 tỷ đồng, tập trung gom VND, SHB.
@@ -92,6 +92,20 @@ VN-Index có phiên giao dịch đầy kịch tính. Nếu tâm lý thận trọ
 Độ rộng thị trường nghiêng về số mã giảm. Tuy nhiên, nhóm bán lẻ tạo điểm sáng với MWG, FRT đóng cửa sắc xanh. SHB là cổ phiếu ngược dòng ấn tượng từ mức sàn về tham chiếu với thanh khoản kỷ lục.
 Khối ngoại tiếp tục mua ròng phiên thứ 3 liên tiếp với giá trị 520 tỷ đồng, tập trung gom HPG, MWG, STB.
 Điểm số kỹ thuật ngắn hạn giảm về mức -2 (Trung Tính). Hệ số P/E đạt 13.4x.
+
+<Ví dụ 7: Thị trường Giảm mạnh>
+Tiêu đề:  VN-Index chao đảo
+Thị trường mở cửa phiên giao dịch chịu áp lực điều chỉnh mạnh. Kết phiên, VN-Index dừng chân tại mốc 1.310 điểm, giảm 19,32 điểm (-1,45%). Thanh khoản sụt giảm với khối lượng giao dịch đạt 650 triệu cổ phiếu, tương ứng giá trị 17.819 tỷ đồng.
+Độ rộng thị trường nghiêng hẳn về phía bên bán. Ghi nhận áp lực bán mạnh tại nhóm bất động sản.
+Khối ngoại bán ròng phiên thứ 6 liên tiếp với giá trị 337 tỷ đồng.
+Phiên giảm điểm khiến điểm số kỹ thuật giảm từ mức -2 xuống -5 (TIÊU CỰC).
+
+<Ví dụ 8: Thị trường tạo đỉnh mới>
+Tiêu đề: Chạm đỉnh mới
+VN-Index có phiên giao dịch đầy khởi sắc. Chỉ số đóng cửa ở mức cao mới, tăng 10,95 điểm (+0,82%). Thanh khoản cải thiện, khối lượng khớp lệnh đạt 890 triệu đơn vị, tương ứng giá trị giao dịch hơn 22.500 tỷ đồng.
+Xét về độ rộng, thị trường nghiêng về số mã tăng. Nhóm chứng khoán là tâm điểm bứt phá.
+Khối ngoại tạo điểm tích cực khi quay lại mua ròng 908 tỷ đồng.
+Điểm số kỹ thuật cải thiện lên mức 3 (TRUNG TÍNH).
 
 ---
 YÊU CẦU KHI VIẾT BÀI MỚI:
