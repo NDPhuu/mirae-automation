@@ -6,19 +6,26 @@ VERSION = "1.0.0"
 
 # 2. DANH SÁCH NGÀNH (Giữ nguyên như cũ)
 SECTOR_MAPPING = {
-    "Ngân hàng": ["VCB", "BID", "CTG", "MBB", "ACB", "TCB", "VPB", "STB", "HDB", "EIB", "SHB"],
-    "Chứng khoán": ["SSI", "VND", "VCI", "HCM", "MBS", "SHS", "FTS", "VIX", "BSI"],
-    "Bất động sản": ["VHM", "VIC", "VRE", "NVL", "PDR", "DIG", "DXG", "KDH", "CEO", "NLG"],
-    "Thép": ["HPG", "HSG", "NKG"],
-    "Dầu khí": ["GAS", "PLX", "PVD", "PVS", "BSR", "OIL"],
-    "Bán lẻ": ["MWG", "FRT", "DGW", "PNJ", "PET"],
-    "Thủy sản": ["VHC", "ANV", "IDI", "FMC"],
-    "Khu công nghiệp": ["KBC", "IDC", "SZC", "VGC", "GVR"],
-    "Đầu tư công & Xây dựng": ["VCG", "HHV", "LCG", "KSB", "CTD", "HBC"],
-    "Điện & Năng lượng": ["POW", "REE", "GEG", "NT2", "GEX"]
+    "Ngân hàng":               ["VCB","CTG","BID","TCB","VPB","MBB","LPB","ACB","HDB","STB","SHB","SSB","TPB","OCB","EIB","MSB","VIB","VAB"],
+    "Chứng khoán":            ["SSI","HCM","BSI","TVB","AGR","ORS","MBS","VND","CTS","TVS"],
+    "Bảo hiểm":               ["BVH","MIG","PVI","BMI","PGI"],
+    "Bất động sản":           ["VIC","VHM","NVL","CKG","VRE","KBC","DXG","NLG","SCR","NHA","HDC","HPX","IJC","HQC","CRE","HAR","LDG"],
+    "Xây dựng & Xây dựng công trình": ["CTD","FDC","C32","PC1","LGL","BAX","COM","SC5","BCE"],
+    "Nguyên vật liệu (Thép, Xi măng)": ["HPG","HSG","NKG","BAX","SMC","LAF","HT1","SGH","TRC"],
+    "Hóa chất & Phân bón":    ["DPM","DGC","DCM","BFC","CSV"],
+    "Dệt may & Sợi":         ["TCM","DHC"],
+    "Vận tải & Logistics":     ["HVN","VJC","PVT","VSC","GMD","VOS"],
+    "Năng lượng (Dầu khí & Điện)": ["GAS","PLX","POW","NT2","PGC"],
+    "Công nghệ & Viễn thông":  ["FPT","CMC","VNG"],
+    "Tiêu dùng thiết yếu":    ["VNM","SAB","MCH","KDC","DHC","QNS","ASG"],
+    "Tiêu dùng không thiết yếu": ["MWG","FRT","PNJ"],
+    "Y tế & Dược phẩm":       ["DHG","IMP","OPC","TRA"],
+    "Nông nghiệp & Thủy sản":  ["ANV","DBC","HNG","ASM"]
 }
 
-# 3. CẤU HÌNH AI (PROMPT TEMPLATE - VERSION 2.1 - CÓ ĐỘ RỘNG)
+
+# 3. CẤU HÌNH AI (PROMPT TEMPLATE)
+# Đây là prompt cơ bản (Few-shot đơn giản) dùng cho Giai đoạn 1.
 REPORT_PROMPT_TEMPLATE = """
 Bạn là Chuyên viên phân tích cấp cao của Công ty Chứng khoán Mirae Asset Việt Nam (MAS).
 Nhiệm vụ: Viết mục "NHẬN ĐỊNH THỊ TRƯỜNG" cho bản tin cuối ngày.
