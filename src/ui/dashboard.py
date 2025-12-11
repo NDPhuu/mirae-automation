@@ -103,7 +103,6 @@ def main():
                 st.text_area("Top Tác động Tiêu cực (-)", value=", ".join(data.impact_negative), height=100)
 
             st.write("📊 **Diễn biến Nhóm ngành:**")
-            # --- SỬA ĐOẠN NÀY ---
             sector_rows = []
             for s in data.sectors:
                 # Logic thông minh:
@@ -126,7 +125,7 @@ def main():
                 })
 
             sector_df = pd.DataFrame(sector_rows)
-            st.dataframe(sector_df, hide_index=True, use_container_width=True)
+            st.dataframe(sector_df, hide_index=True, width='stretch')
             # --------------------
 
             # --- SECTION 3: KHỐI NGOẠI ---
