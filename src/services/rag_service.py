@@ -17,11 +17,11 @@ class RAGService:
         self.db_dir = db_dir
         self.vector_db = None # Chưa kết nối vội
         
-        print("📥 Đang tải Model BGE-M3 (Chạy trên GPU)...")
-        # Cấu hình chạy GPU (CUDA)
+        print("📥 Đang tải Model BGE-M3 (Chạy trên CPU)...")
+        # Cấu hình chạy CPU
         self.embeddings = HuggingFaceEmbeddings(
             model_name="BAAI/bge-m3",
-            model_kwargs={'device': 'cuda'}, # Đã bật CUDA
+            model_kwargs={'device': 'cpu'}, 
             encode_kwargs={'normalize_embeddings': True}
         )
 
@@ -94,7 +94,7 @@ class RAGService:
         print("✅ Đã nạp xong dữ liệu vào RAG Local!")
         self.vector_db = temp_db # Lưu lại kết nối
 
-    def retrieve_similar_reports(self, query: str, k=3) -> str:
+    def retrieve_similar_reports(self, query: str, k=5) -> str:
         """
         Tìm k bài báo cáo cũ giống với ngữ cảnh hiện tại nhất.
         """
