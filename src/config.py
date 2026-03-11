@@ -4,107 +4,45 @@
 APP_NAME = "Mirae Asset Daily Report Automation"
 VERSION = "2.2.1"
 
-# 2. DANH SÁCH NGÀNH
+# 2. DANH SÁCH NGÀNH (CẬP NHẬT MỚI)
 SECTOR_MAPPING = {
-  "Ngân hàng": [
-    "ACB", "BID", "CTG", "EIB", "HDB", "LPB", "MBB", "MSB", "NAB", 
-    "OCB", "SHB", "SSB", "STB", "TCB", "TPB", "VCB", "VIB", "VPB"
-  ],
-  "Chứng khoán & Dịch vụ tài chính": [
-    "AGR", "APG", "BCG", "BSI", "CTS", "DSE", "DSC", "EVF", "FIT", 
-    "FTS", "HCM", "MBS", "OGC", "ORS", "SSI", "TCI", "TVB", "TVS", 
-    "VCI", "VDS", "VIX", "VND"
-  ],
-  "Quỹ ETF & Chứng chỉ quỹ": [
-    "E1VFVN30", "FUCVREIT", "FUCTVGF3", "FUCTVGF4", "FUCTVGF5", 
-    "FUEDCMID", "FUEABVND", "FUEBFVND", "FUEFCV50", "FUEIP100", 
-    "FUEKIV30", "FUEKIVFS", "FUEKIVND", "FUEMAV30", "FUEMAVND", 
-    "FUESSV30", "FUESSV50", "FUESSVFL", "FUEVFVND", "FUEVN100"
-  ],
-  "Bất động sản": [
-    "AGG", "BCM", "CCL", "CKG", "CRE", "D2D", "DIG", "DRH", "DTA", 
-    "DXG", "DXS", "FDC", "FIR", "HAR", "HDC", "HDG", "HPX", "HQC", 
-    "IJC", "ITA", "ITC", "KBC", "KDH", "KHG", "KOS", "LDG", "LEC", 
-    "LGL", "LHG", "NBB", "NLG", "NTL", "NVL", "NVT", "PDR", "PTL", 
-    "QCG", "SCR", "SGR", "SIP", "SJS", "SZC", "SZL", "TCH", "TDC", 
-    "TDH", "TEG", "TIP", "TIX", "TLD", "TN1", "VHM", "VIC", "VPH", 
-    "VPI", "VRC", "VRE", "VSI"
-  ],
-  "Xây dựng & Vật liệu xây dựng": [
-    "ACC", "ADP", "BCE", "BMP", "C32", "C47", "CDC", "CIG", "CII", 
-    "CRC", "CTD", "CTI", "CTR", "CVT", "DC4", "DHA", "DPG", "DXV", 
-    "EVG", "FCM", "FCN", "GMH", "HAS", "HID", "HHV", "HT1", "HTI", 
-    "HTN", "HU1", "HUB", "HVH", "HVX", "KPF", "LBM", "LCG", "LGC", 
-    "LM8", "MDG", "NAV", "NHA", "NNC", "PC1", "PHC", "PTC", "SC5", 
-    "TCD", "TCR", "THG", "VCG", "VGC", "VNE"
-  ],
-  "Thép & Tài nguyên cơ bản": [
-    "ACG", "BMC", "DHC", "DHM", "DTL", "GTA", "HAP", "HHP", "HMC", 
-    "HPG", "HSG", "KSB", "NKG", "PTB", "SAV", "SHA", "SHI", "SMC", 
-    "SVT", "TLH", "TNA", "TNI", "TNT", "TTF", "VCA", "VID", "VPG", 
-    "YBM"
-  ],
-  "Thủy sản": [
-    "AAM", "ABT", "ACL", "ANV", "ASM", "CMX", "DAT", "FMC", "IDI", "VHC"
-  ],
-  "Nông nghiệp (Chăn nuôi, Giống, Gạo)": [
-    "AGM", "BAF", "DBC", "HAG", "HSL", "NSC", "PAN", "SSC"
-  ],
-  "Tiêu dùng thiết yếu (Sữa, Đường, Bia, Thực phẩm chế biến)": [
-    "BBC", "BHN", "KDC", "LAF", "LSS", "MCM", "MSN", "NAF", "QNS", 
-    "SAB", "SBT", "SMB", "VCF", "VNM"
-  ],
-  "Hóa chất & Phân bón": [
-    "AAA", "ABS", "BFC", "BRC", "CSV", "DCM", "DGC", "DPM", "DPR", 
-    "DTT", "GVR", "HCD", "HII", "HRC", "NHH", "PHR", "PLP", "RDP", 
-    "SFG", "SJF", "TNC", "TPC", "TRC", "TSC", "VAF", "VFG", "VPS"
-  ],
-  "Bán lẻ": [
-    "AST", "BTT", "BVH", "CMV", "COM", "DGW", "FRT", "MWG", "PET", 
-    "PIT", "SBV"
-  ],
-  "Vận tải, Cảng biển & Logistics": [
-    "ABR", "ASG", "CLL", "DVP", "GEE", "GEX", "GMD", "GSP", "HAH", 
-    "HTV", "ILB", "L10", "MHC", "NCT", "NO1", "PAC", "PDN", "PJT", 
-    "PVP", "PVT", "QNP", "SFI", "SGN", "SRF", "STG", "SVI", "TCL", 
-    "TCO", "TDP", "TMS", "TV2", "TYA", "VIP", "VNL", "VOS", "VSC", 
-    "VTB", "VTO", "VTP"
-  ],
-  "Năng lượng & Tiện ích": [
-    "ASP", "BTP", "BWE", "CCI", "CHP", "CLW", "CNG", "DRL", "GAS", 
-    "GEG", "HNA", "KHP", "NT2", "PGC", "PGD", "PGV", "PMG", "POW", 
-    "PPC", "PSH", "REE", "S4A", "SBA", "SFC", "SHP", "SJD", "SMA", 
-    "TBC", "TDG", "TDM", "TDW", "TMP", "TTA", "TTE", "UIC", "VPD", 
-    "VSH"
-  ],
-  "Dầu khí": [
-    "PLX", "PVD"
-  ],
-  "Công nghệ & Viễn thông": [
-    "CMG", "ELC", "FPT", "ICT", "ITD", "SAM", "SGT", "ST8"
-  ],
-  "Y tế & Dược phẩm": [
-    "DBD", "DBT", "DCL", "DHG", "DMC", "IMP", "JVC", "OPC", "SPM", 
-    "TNH", "TRA", "VDP", "VMD"
-  ],
-  "Bảo hiểm": [
-    "BIC", "BMI", "BVH", "MIG", "PGI"
-  ],
-  "Du lịch & Giải trí": [
-    "DAH", "DSN", "HVN", "SCS", "SKG", "TCT", "VJC", "VNG", "VNS"
-  ],
-  "Ô tô & Phụ tùng": [
-    "CSM", "CTF", "DRC", "HAX", "HHS", "HTL", "SRC", "SVC", "TMT"
-  ],
-  "Hàng cá nhân & Gia dụng": [
-    "AAT", "ADS", "APH", "BKG", "CLC", "DQC", "EVE", "GDT", "GIL", 
-    "GMC", "HTG", "KMR", "LIX", "MCP", "MSH", "NHT", "PNJ", "RAL", 
-    "SBG", "STK", "SVD", "TCM", "TLG", "TVT"
-  ],
-  "Truyền thông": [
-    "ADG", "PNC", "YEG"
-  ]
+    "Ô tô và phụ tùng": ["VVS", "CSM", "CTF", "DRC", "HAX", "HHS", "HTL", "SRC", "SVC", "TMT"],
+    "Xây dựng và Vật liệu": ["CCC", "TSA", "GMH", "RYG", "ACC", "ADP", "BCE", "BMP", "C32", "C47", "CDC", "CIG", "CII", "CRC", "CTD", "CTI", "CTR", "CVT", "DPG", "DC4", "DHA", "DLG", "DXV", "EVG", "FCM", "FCN", "GEL", "HID", "HHV", "HAS", "HT1", "HTI", "HU1", "HVH", "KSB", "LBM", "LCG", "LGC", "LM8", "MDG", "NAV", "NHA", "NNC", "PC1", "PHC", "PTC", "SC5", "TCR", "THG", "TLD", "TNT", "TCD", "HUB", "VCG", "VGC", "VNE", "VSI"],
+    "Hàng công nghiệp": ["SBG", "APH", "MCP", "TDP"],
+    "Quỹ đầu tư": ["FUCTVGF3", "FUEIP100", "FUEKIV30", "FUCTVGF4", "FUEDCMID", "FUEKIVFS", "FUEMAVND", "FUEFCV50", "FUEBFVND", "FUCTVGF5", "FUEKIVND", "FUEABVND", "FUETCC50", "FUETPVND", "FUESSV50", "E1VFVN30", "FUESSVFL", "FUEMAV30", "FUESSV30", "FUEVFVND", "FUEVN100", "FUCVREIT"],
+    "Công nghiệp nặng": ["NO1", "L10", "SRF"],
+    "Hóa chất": ["AAA", "ABS", "HII", "BFC", "BRC", "CSV", "DCM", "DGC", "DPM", "DPR", "DTT", "HCD", "HRC", "NHH", "PLP", "PHR", "SFG", "TNC", "TPC", "TRC", "TSC", "VAF", "VFG", "VPS", "GVR"],
+    "Sản xuất thực phẩm": ["AAM", "ABT", "ACL", "ANT", "ANV", "ASM", "BAF", "CMX", "DBC", "FMC", "HAG", "HSL", "HPA", "IDI", "KDC", "LAF", "LSS", "MCM", "MCH", "MSN", "NSC", "PAN", "DAT", "SBT", "SSC", "TCO", "VHC", "VNM"],
+    "Hàng cá nhân": ["AAT", "STK", "ADS", "EVE", "GIL", "HTG", "KMR", "LIX", "PNJ", "MSH", "SVD", "TCM", "TVT"],
+    "Tư vấn & Hỗ trợ Kinh doanh": ["ABR", "TV2"],
+    "Ngân hàng": ["ACB", "BID", "CTG", "EIB", "HDB", "KLB", "LPB", "MBB", "MSB", "NAB", "OCB", "SSB", "SHB", "STB", "TCB", "TPB", "VAB", "VCB", "VIB", "VPB"],
+    "Phân phối thực phẩm & dược phẩm": ["AFX"],
+    "Dịch vụ tài chính": ["AGR", "APG", "VPX", "BCG", "BSI", "CTS", "DSC", "DSE", "EVF", "FTS", "HCM", "OGC", "ORS", "SSI", "TCX", "TCI", "TVB", "TVS", "VCI", "VDS", "VIX", "VND", "VCK"],
+    "Bất động sản": ["AGG", "BCM", "CCL", "CRE", "CKG", "D2D", "DIG", "DRH", "DTA", "DXG", "DXS", "FDC", "FIR", "HPX", "HAR", "HDC", "HDG", "TCH", "HQC", "HTN", "CRV", "IJC", "ITC", "KBC", "KDH", "KHG", "KOS", "LDG", "LGL", "LHG", "NBB", "VHM", "NLG", "NVL", "NTC", "NTL", "NVT", "PDR", "PTL", "QCG", "SCR", "SGR", "SIP", "SZC", "SJS", "SZL", "TAL", "TDC", "TDH", "TEG", "TIP", "TIX", "TN1", "VIC", "VPH", "VPI", "VRC", "VRE"],
+    "Lâm nghiệp và Giấy": ["ACG", "DHC", "GTA", "HAP", "HHP", "PTB", "SAV", "TTF", "VID"],
+    "Vận tải": ["ASG", "CLL", "DVP", "GMD", "GSP", "HAH", "HTV", "ILB", "MHC", "NCT", "PDN", "PDV", "PJT", "PVT", "PVP", "QNP", "SGN", "SFI", "STG", "TCL", "TMS", "VIP", "VNL", "VOS", "VSC", "VTO", "VTP"],
+    "Nước & Khí đốt": ["ASP", "BWE", "CCI", "CLW", "CNG", "GAS", "PGC", "PGD", "PMG", "SFC", "TDG", "TDM", "TDW"],
+    "Bia và đồ uống": ["BHN", "NAF", "SAB", "SMB", "VCF"],
+    "Bảo hiểm phi nhân thọ": ["BIC", "BMI", "MIG", "PGI"],
+    "Dược phẩm": ["DBD", "DBT", "DCL", "DHG", "DMC", "FIT", "IMP", "OPC", "SPM", "TRA", "VDP", "VMD"],
+    "Hàng gia dụng": ["BKG", "DQC", "GDT", "RAL", "TLG"],
+    "Khai khoáng": ["BMC", "DHM", "VPG", "YBM"],
+    "Sản xuất Dầu khí": ["BSR", "PLX"],
+    "Sản xuất & Phân phối Điện": ["BTP", "CHP", "TTE", "DRL", "PGV", "GHC", "GEG", "HNA", "KHP", "NT2", "PPC", "POW", "REE", "SBA", "SHP", "SJD", "SMA", "S4A", "TBC", "TMP", "TTA", "UIC", "VPD", "VSH"],
+    "Bán lẻ": ["BTT", "CMV", "COM", "DGW", "FRT", "MWG", "PET", "PIT", "SBV", "SVT", "AST"],
+    "Bảo hiểm nhân thọ": ["BVH"],
+    "Thiết bị và Dịch vụ Y tế": ["TNH", "JVC"],
+    "Thuốc lá": ["CLC"],
+    "Truyền thông": ["ADG", "PNC", "YEG"],
+    "Phần mềm & Dịch vụ Máy tính": ["CMG", "ICT", "FPT", "ITD", "SGT"],
+    "Du lịch & Giải trí": ["DAH", "DSN", "SCS", "SKG", "TCT", "VJC", "HVN", "VNG", "VNS", "VPL"],
+    "Kim loại": ["DTL", "HMC", "HPG", "HSG", "NKG", "SHA", "SHI", "SMC", "TLH", "TNI", "VCA"],
+    "Thiết bị và Phần cứng": ["ELC", "SAM", "ST8"],
+    "Điện tử & Thiết bị điện": ["GEX", "GEE", "PAC", "TYA", "VTB"],
+    "Hàng hóa giải trí": ["NHT"],
+    "Thiết bị, Dịch vụ và Phân phối Dầu khí": ["PVD"],
 }
+
 
 # 3. CẤU HÌNH AI (RAG PROMPT TEMPLATE)
 # Lưu ý: Các biến trong ngoặc nhọn {} phải khớp chính xác với code trong ai_engine.py
@@ -140,11 +78,11 @@ YÊU CẦU KHI VIẾT BÀI MỚI:
 2.  **Phong cách:** Bắt chước CẤU TRÚC CÂU và CÁCH DÙNG TỪ của các bài mẫu ở trên (Context), nhưng thay thế bằng số liệu của hôm nay.
 3.  **Cấu trúc 4 đoạn:**
     *   *Đoạn 1:* Diễn biến phiên, điểm số, tâm lý thị trường và thanh khoản (Viết rõ khối lượng và giá trị).
-    *   *Đoạn 2:* **Độ rộng thị trường** (Phải nhận xét: "nghiêng về bên mua/bán" hoặc "cân bằng" dựa trên số mã Tăng/Giảm). Sau đó liệt kê Top tác động và Diễn biến ngành.
-    *   *Đoạn 2.5:* Diễn biến ngành. Phân tích ngành nào dẫn dắt, liệt kê Top 3 ngành tăng (nếu có) kèm mã cổ phiếu và ngược lại ngành nào tiêu cực, liệt kê Top 3 ngành giảm (nếu có) kèm mã cổ phiếu.
+    *   *Đoạn 2:* **Độ rộng thị trường** (Phải nhận xét: "nghiêng về bên mua/bán" hoặc "cân bằng" dựa trên số mã Tăng/Giảm). Sau đó liệt kê Top tác động.
+    *   *Đoạn 2.5:* Diễn biến ngành. Viết thật RÚT GỌN. Chỉ liệt kê tối đa 3 ngành tích cực nhất kèm theo tối đa 3 mã nổi bật mỗi ngành, và tối đa 3 ngành tiêu cực nhất kèm theo tối đa 3 mã nổi bật. Không liệt kê lan man. Ví dụ: "Dòng tiền tập trung vào nhóm [Ngành 1] (mã 1, mã 2), [Ngành 2] (mã 3), trong khi [Ngành 3] (mã 4) sụt giảm mạnh". Dựa tuyệt đối vào dữ liệu được cung cấp.
     *   *Đoạn 3:* Tổng giá trị mua/bán ròng và các mã tâm điểm.
     *   *Đoạn 4:* Nhận định ngắn gọn về điểm số kỹ thuật và P/E.
-3.  **Ngôn ngữ:** Chuyên nghiệp, khách quan, sử dụng thuật ngữ tài chính (lực cầu, rung lắc, phân hóa, chốt lời...).
+4.  **Ngôn ngữ:** Chuyên nghiệp, khách quan, sử dụng thuật ngữ tài chính (lực cầu, rung lắc, phân hóa, chốt lời...).
 
 BẮT ĐẦU VIẾT BÁO CÁO:
 """

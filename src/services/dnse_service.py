@@ -70,7 +70,7 @@ class DNSEService:
 
         def on_connect(c, userdata, flags, rc):
             if rc == 0:
-                print(f"🔌 Connected. Subscribing to Index + {len(stock_list)} Stocks...")
+                print(f"[DNSE REST] Connected. Subscribing to Index + {len(stock_list)} Stocks...")
                 # 1. Sub VNINDEX
                 c.subscribe("plaintext/quotes/krx/mdds/index/VNINDEX")
                 
@@ -106,7 +106,7 @@ class DNSEService:
                         total_volume=payload.get("totalVolumeTraded", 0),
                         breadth=breadth
                     )
-                    print("✅ Got VN-Index")
+                    # print("Got VN-Index")
 
                 # B. Xử lý Cổ phiếu lẻ
                 elif "stockinfo" in topic:
@@ -114,10 +114,12 @@ class DNSEService:
                     if symbol:
                         self._temp_data["stocks"][symbol] = {
                             "price": payload.get("closePrice"),
+                            "ref_price": payload.get("referencePrice"), # Giá tham chiếu
                             "change_percent": payload.get("changedRatio", 0.0),
                             "volume": payload.get("totalVolumeTraded", 0),
                             "f_buy_val": payload.get("buyForeignValue", 0.0),  # Giá trị Tây mua
-                            "f_sell_val": payload.get("sellForeignValue", 0.0) # Giá trị Tây bán
+                            "f_sell_val": payload.get("sellForeignValue", 0.0), # Giá trị Tây bán
+                            "listed_shares": payload.get("listedShares", 0) # Số cổ phiếu đăng ký
                         }
                         # print(f"   -> Got {symbol}") # Uncomment nếu muốn debug chi tiết
 
@@ -140,11 +142,11 @@ class DNSEService:
                 got_stocks_count = len(self._temp_data["stocks"])
                 
                 # Nếu đã lấy được Index và > 90% danh sách cổ phiếu thì dừng sớm
-                if got_index and got_stocks_count >= len(stock_list) * 0.9:
-                    print("🚀 Đã lấy đủ dữ liệu cần thiết.")
-                    break
-                
-                time.sleep(0.5)
+                # if got_index and got_stocks_count >= len(stock_list) * 0.9:
+                #     print("🚀 Đã lấy đủ dữ liệu cần thiết.")
+                #     break
+    
+                time.sleep(1)
                 
             client.loop_stop()
             client.disconnect()

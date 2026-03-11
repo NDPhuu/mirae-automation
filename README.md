@@ -23,7 +23,7 @@ Dự án được xây dựng nhằm giải quyết bài toán "nỗi đau" củ
 *   **Local Vector DB:** Sử dụng **ChromaDB** chạy local để lưu trữ tri thức từ hàng trăm báo cáo cũ.
 *   **Advanced Embedding:** Sử dụng model **BAAI/bge-m3** (State-of-the-art) để hiểu ngữ nghĩa tiếng Việt và tài chính sâu sắc.
 *   **Rich Query Construction:** Hệ thống tự động biến số liệu thô thành một câu truy vấn ngữ nghĩa (VD: *"Thị trường giảm mạnh, thanh khoản bùng nổ, áp lực bán tháo..."*) để tìm kiếm bài mẫu chính xác nhất.
-*   **Generative AI:** Sử dụng **Google Gemini 1.5 Flash** để tổng hợp và viết bài.
+*   **Generative AI:** Sử dụng **Google Gemini 2.5 Flash** để tổng hợp và viết bài.
 
 ### 🖥️ Giao diện tương tác (Dashboard)
 *   Hiển thị trực quan 4 cột: Điểm số, Khối lượng, Giá trị (Tỷ đồng), Độ rộng.

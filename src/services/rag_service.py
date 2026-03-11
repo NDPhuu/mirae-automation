@@ -94,7 +94,7 @@ class RAGService:
         print("✅ Đã nạp xong dữ liệu vào RAG Local!")
         self.vector_db = temp_db # Lưu lại kết nối
 
-    def retrieve_similar_reports(self, query: str, k=5) -> str:
+    def retrieve_similar_reports(self, query: str, k=3) -> str:
         """
         Tìm k bài báo cáo cũ giống với ngữ cảnh hiện tại nhất.
         """

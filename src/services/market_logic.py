@@ -1,32 +1,29 @@
 # File: src/services/market_logic.py
 from typing import List, Dict
-from src.models import StockData, SectorPerformance, DailyReportInput, ForeignTrading
+from src.models import SectorPerformance, ForeignTrading, DailyReportInput, StockData, MarketIndex
 from src.config import SECTOR_MAPPING
+from src.services.ssi_service import SSIService
 
 class MarketLogic:
     def __init__(self):
-        pass
+        # Khởi tạo SSI Service
+        self.ssi_service = SSIService()
 
-    def analyze_sectors(self, stock_data_dict: Dict[str, dict]) -> List[SectorPerformance]:
+    def analyze_sectors(self, stocks_dict: Dict[str, StockData]) -> List[SectorPerformance]:
         """
-        Tính toán hiệu suất từng nhóm ngành dựa trên giá các mã thành phần.
+        Tính toán hiệu suất nhóm ngành dựa trên dữ liệu gộp.
         """
         results = []
         
         for sector_name, symbols in SECTOR_MAPPING.items():
-            # Lấy dữ liệu các mã thuộc ngành này
             sector_stocks = []
             total_change = 0.0
             count = 0
             
             for sym in symbols:
-                data = stock_data_dict.get(sym)
-                if data:
-                    # --- FIX: Xử lý an toàn cho change_percent ---
-                    raw_change = data.get("change_percent")
-                    change = float(raw_change) if raw_change is not None else 0.0
-                    # ---------------------------------------------
-                    
+                stock = stocks_dict.get(sym)
+                if stock:
+                    change = stock.change_percent
                     sector_stocks.append({"symbol": sym, "change": change})
                     total_change += change
                     count += 1
@@ -34,17 +31,17 @@ class MarketLogic:
             if count == 0:
                 continue
 
-            # 1. Tính % tăng giảm trung bình của ngành
+            # Tính trung bình ngành
             avg_change = total_change / count
             
-            # 2. Tìm mã Tăng mạnh nhất & Giảm mạnh nhất trong ngành
-            # Sắp xếp theo % giảm dần
+            # Tìm mã Tăng/Giảm mạnh nhất để hiển thị
             sorted_stocks = sorted(sector_stocks, key=lambda x: x["change"], reverse=True)
             
             top_gainers = [s["symbol"] for s in sorted_stocks if s["change"] > 0][:3]
-            top_losers = [s["symbol"] for s in sorted_stocks if s["change"] < 0][-3:] # Lấy 3 mã cuối
+            top_losers = [s["symbol"] for s in sorted_stocks if s["change"] < 0][-3:]
+            top_losers.reverse() # Đảo ngược để mã giảm sâu nhất đứng đầu
             
-            # 3. Đánh giá trạng thái ngành
+            # Đánh giá trạng thái
             status = "Trung tính"
             if avg_change >= 1.0: status = "Tích cực"
             elif avg_change <= -1.0: status = "Tiêu cực"
@@ -59,114 +56,123 @@ class MarketLogic:
                 status=status
             ))
             
-        # Sắp xếp các ngành: Ngành tăng mạnh nhất lên đầu
+        # Sắp xếp ngành tăng mạnh nhất lên đầu
         return sorted(results, key=lambda x: x.avg_change, reverse=True)
 
-    def get_top_impact(self, stock_data_dict: Dict[str, dict]) -> (List[str], List[str]):
+    def get_top_impact(self, stocks_dict: Dict[str, StockData], vnindex_point: float = 0) -> (List[str], List[str]):
         """
-        Tìm Top mã tác động.
-        FIX: Sử dụng trọng số (Giá trị giao dịch * % Thay đổi) để ưu tiên Bluechip.
-        Đã thêm cơ chế xử lý lỗi NoneType.
+        Tìm Top mã tác động chỉ số.
+        Công thức chuẩn market-cap formula.
         """
         all_stocks = []
-        for sym, data in stock_data_dict.items():
-            # --- ĐOẠN CODE FIX LỖI ---
-            # Lấy dữ liệu thô
-            raw_change = data.get("change_percent")
-            raw_price = data.get("price")
-            raw_volume = data.get("volume")
-
-            # Ép kiểu an toàn (Safe Casting): Nếu None thì về 0.0
+        market_caps = {}
+        
+        # Bước 1: Tính Market Cap cho từng mã
+        for sym, stock in stocks_dict.items():
+            price = float(stock.price or 0)
+            shares = int(stock.shares or 0)
+            market_caps[sym] = price * shares
+        
+        total_market_cap = sum(market_caps.values())
+        
+        # Nếu không có total_market_cap (do thiếu listed_shares), không thể tính chính xác
+        if total_market_cap == 0:
+            return [], []
+        
+        for sym, stock in stocks_dict.items():
             try:
-                change = float(raw_change) if raw_change is not None else 0.0
-                price = float(raw_price) if raw_price is not None else 0.0
-                volume = float(raw_volume) if raw_volume is not None else 0.0
+                price = float(stock.price) if stock.price else 0.0
+                ref_price = float(stock.ref_price) if stock.ref_price else 0.0
+                change = float(stock.change_percent) if stock.change_percent else 0.0
+                
             except (ValueError, TypeError):
-                # Trường hợp dữ liệu bị lỗi format lạ, gán về 0 để không crash app
-                change, price, volume = 0.0, 0.0, 0.0
-            # -------------------------
+                price, ref_price, change = 0.0, 0.0, 0.0
             
-            # Công thức ước lượng sức mạnh tác động:
-            trading_value = price * volume
-            impact_score = change * trading_value 
+            # Step 2: Weight
+            weight = market_caps[sym] / total_market_cap
+            
+            # Step 3: Pct Change
+            pct_change = (price - ref_price) / ref_price if ref_price > 0 else 0.0
+            
+            # Step 4: Pct Impact
+            pct_impact = weight * pct_change
+            
+            # Step 5: Impact Points
+            impact_points = vnindex_point * pct_impact
 
             all_stocks.append({
                 "symbol": sym,
-                "change": change,
-                "score": impact_score
+                "change": change,  # Lưu lại percentage change để hiển thị
+                "impact_points": impact_points
             })
             
-        # Sắp xếp theo Impact Score thay vì chỉ theo % Change
-        sorted_stocks = sorted(all_stocks, key=lambda x: x["score"], reverse=True)
+        # Sắp xếp theo Impact Points (Điểm tác động chỉ số)
+        sorted_stocks = sorted(all_stocks, key=lambda x: x["impact_points"], reverse=True)
         
-        # Top 3 Tích cực (Score cao nhất)
-        positive = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[:3] if s['score'] > 0]
+        # Top 3 Tích cực, hiển thị change_percent theo yêu cầu (symbol (+change%))
+        positive = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[:3] if s['impact_points'] > 0]
         
-        # Top 3 Tiêu cực (Score thấp nhất - âm nhiều nhất)
-        negative = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[-3:] if s['score'] < 0]
-        # Đảo ngược lại để mã giảm mạnh nhất đứng đầu list tiêu cực
-        negative.reverse() 
+        # Top 3 Tiêu cực, cũng hiển thị change_percent
+        negative = [f"{s['symbol']} ({s['change']:+.2f}%)" for s in sorted_stocks[-3:] if s['impact_points'] < 0]
+        negative.reverse()
+        
+        return positive, negative
         
         return positive, negative
 
-    def analyze_foreign(self, stock_data_dict: Dict[str, dict]) -> ForeignTrading:
-        """
-        Tính toán giao dịch khối ngoại từ dữ liệu chi tiết từng mã.
-        """
+    def analyze_foreign(self, stocks_dict: Dict[str, StockData]) -> ForeignTrading:
+        """Phân tích dữ liệu khối ngoại. SSI trả về giá trị VND gốc → chia 1 tỷ."""
         total_net_value = 0.0
         foreign_stats = []
 
-        for sym, data in stock_data_dict.items():
-            buy_val = data.get("f_buy_val", 0.0) or 0.0
-            sell_val = data.get("f_sell_val", 0.0) or 0.0
+        for sym, stock in stocks_dict.items():
+            buy_val = float(stock.f_buy_val or 0)
+            sell_val = float(stock.f_sell_val or 0)
             
-            # Tính giá trị ròng (Tỷ đồng)
-            net_val = (buy_val - sell_val)
+            if buy_val == 0 and sell_val == 0:
+                continue
             
-            if net_val != 0:
+            # SSI luôn trả về đơn vị VND gốc → chia 1 tỷ để ra Tỷ đồng
+            buy_ty = buy_val / 1_000_000_000
+            sell_ty = sell_val / 1_000_000_000
+            
+            net_val = buy_ty - sell_ty
+            
+            if round(net_val, 1) != 0:
                 total_net_value += net_val
                 foreign_stats.append({"symbol": sym, "net": net_val})
 
-        # Sắp xếp
+        # Sắp xếp theo giá trị ròng
         sorted_foreign = sorted(foreign_stats, key=lambda x: x["net"], reverse=True)
         
-        # Top Mua ròng (Dương lớn nhất)
+        # Top 3 Mua ròng (lớn nhất)
         top_buy = [f"{s['symbol']} (+{s['net']:.0f} tỷ)" for s in sorted_foreign[:3] if s['net'] > 0]
         
-        # Top Bán ròng (Âm lớn nhất - nằm cuối list)
-        top_sell = [f"{s['symbol']} (-{abs(s['net']):.0f} tỷ)" for s in sorted_foreign[-3:] if s['net'] < 0]
+        # Top 3 Bán ròng (âm nhất)
+        top_sell_raw = [s for s in sorted_foreign if s['net'] < 0][-3:]
+        top_sell_raw.reverse()
+        top_sell = [f"{s['symbol']} (-{abs(s['net']):.0f} tỷ)" for s in top_sell_raw]
         
-        # Trạng thái
         status = "MUA RÒNG" if total_net_value > 0 else "BÁN RÒNG"
         
         return ForeignTrading(
             status=status,
-            net_value=round(abs(total_net_value), 2), # Lấy trị tuyệt đối để hiển thị
+            net_value=round(abs(total_net_value), 2),
             top_buy=top_buy,
             top_sell=top_sell
         )
-
-    def prepare_report_input(self, raw_data: Dict) -> DailyReportInput:
-        """
-        Hàm tổng hợp cuối cùng: Biến dữ liệu thô thành Object sạch sẽ cho AI.
-        """
-        if not raw_data or not raw_data.get("index"):
+        
+    def prepare_report_input(self, index_data: MarketIndex, stocks_dict: Dict[str, StockData]) -> DailyReportInput:
+        """Hàm tổng hợp cuối cùng"""
+        if not index_data or not stocks_dict:
             return None
             
-        index_data = raw_data["index"]
-        stocks_dict = raw_data["stocks"]
-        
-        # 1. Phân tích ngành
         sectors = self.analyze_sectors(stocks_dict)
+        pos_impact, neg_impact = self.get_top_impact(stocks_dict, index_data.point)
         
-        # 2. Top tác động
-        pos_impact, neg_impact = self.get_top_impact(stocks_dict)
-        
-        # 3. Tạo Object kết quả
-        # Lưu ý: Các trường như 'liquidity_comment', 'technical_score' 
-        # sẽ được UI điền vào sau (Human-in-the-loop). Ở đây ta để giá trị mặc định.
+        # Gọi hàm phân tích khối ngoại từ DataAggregator
         foreign_data = self.analyze_foreign(stocks_dict)
-
+        
         return DailyReportInput(
             date="Hôm nay", 
             index=index_data,

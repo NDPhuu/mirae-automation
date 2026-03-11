@@ -1,5 +1,10 @@
-# File: src/services/ai_engine.py
 import os
+
+# --- CONFIGURE ENVIROMENT ---
+# Suppress HuggingFace symlink warning on Windows if not in Developer Mode
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+# ----------------------------
+
 import google.generativeai as genai
 from dotenv import load_dotenv
 from src.models import DailyReportInput
@@ -16,7 +21,7 @@ class AIEngine:
             self.model = None
         else:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
         
         # Khởi tạo RAG
         self.rag = RAGService()
@@ -68,6 +73,27 @@ class AIEngine:
         # 2. Gọi RAG để tìm bài mẫu tương tự ngữ cảnh này
         rag_context = self.rag.retrieve_similar_reports(query, k=3)
 
+        # 2.5 Lọc ra top ngành tích cực và tiêu cực
+        sorted_sectors = sorted(data.sectors, key=lambda s: s.avg_change, reverse=True)
+        top_positive_sectors = [s for s in sorted_sectors if s.avg_change > 0][:3]
+        top_negative_sectors = [s for s in sorted_sectors if s.avg_change < 0][-3:]
+        
+        sector_str_list = []
+        if top_positive_sectors:
+            sector_str_list.append("Các ngành đóng góp TÍCH CỰC nhất:")
+            for s in top_positive_sectors:
+                stocks_repr = ", ".join(s.top_gainers[:3]) if s.top_gainers else ""
+                sector_str_list.append(f"- Ngành {s.name}: {float(s.avg_change):+.2f}% (Tác động nhờ: {stocks_repr})")
+        
+        if top_negative_sectors:
+            sector_str_list.append("Các ngành đóng góp TIÊU CỰC nhất:")
+            for s in top_negative_sectors:
+                # Đảo ngược danh sách top_losers để lấy âm nhất (đã được sort)
+                stocks_repr = ", ".join(s.top_losers[:3]) if s.top_losers else ""
+                sector_str_list.append(f"- Ngành {s.name}: {float(s.avg_change):+.2f}% (Kéo lùi bởi: {stocks_repr})")
+        
+        sector_performance_str = "\n".join(sector_str_list)
+
         # 3. Fill dữ liệu vào Prompt
         try:
             prompt = REPORT_PROMPT_TEMPLATE.format(
@@ -87,7 +113,7 @@ class AIEngine:
                 foreign_sell_top=", ".join(data.foreign.top_sell),
                 impact_positive=", ".join(data.impact_positive),
                 impact_negative=", ".join(data.impact_negative),
-                sector_performance="\n".join([f"- {s.name}: {s.status} (Mã: {', '.join(s.top_gainers)})" for s in data.sectors]),
+                sector_performance=sector_performance_str,
                 technical_score=data.technical_score,
                 technical_rating=data.technical_rating,
                 pe_ratio=data.pe_ratio,

@@ -10,7 +10,7 @@ sys.path.append(root_dir)
 
 import streamlit as st
 import pandas as pd
-from src.services.dnse_service import DNSEService
+from src.services.data_aggregator import DataAggregator
 from src.services.market_logic import MarketLogic
 from src.services.ai_engine import AIEngine
 from src.config import SECTOR_MAPPING
@@ -19,20 +19,19 @@ st.set_page_config(page_title="Mirae Asset Report Automation", layout="wide")
 
 # --- HELPER FUNCTIONS ---
 def load_data():
-    with st.spinner('Đang kết nối DNSE lấy dữ liệu thị trường...'):
-        all_symbols = []
-        for symbols in SECTOR_MAPPING.values():
-            all_symbols.extend(symbols)
-        all_symbols = list(set(all_symbols))
+    all_symbols = []
+    for symbols in SECTOR_MAPPING.values():
+        all_symbols.extend(symbols)
+    all_symbols = list(set(all_symbols))
 
-        service = DNSEService()
-        raw_data = service.fetch_all_data(all_symbols)
-        
-        if raw_data and raw_data.get("index"):
-            logic = MarketLogic()
-            report_input = logic.prepare_report_input(raw_data)
-            return report_input
-        return None
+    aggregator = DataAggregator()
+    index_data, stocks_dict = aggregator.fetch_market_data(all_symbols)
+    
+    if index_data and stocks_dict:
+        logic = MarketLogic()
+        report_input = logic.prepare_report_input(index_data, stocks_dict)
+        return report_input
+    return None
 
 # --- MAIN UI ---
 def main():
@@ -45,15 +44,31 @@ def main():
         st.session_state.generated_text = ""
 
     # 1. NÚT LẤY DỮ LIỆU
+    from src.cache import db
+    
     col_btn, col_info = st.columns([1, 4])
+    with col_info:
+        # Lấy thời gian cập nhật gần nhất từ DB
+        index_row = db.get_market_index("VNINDEX")
+        if index_row and "updated_at" in index_row:
+            try:
+                # Đổi ISO string ra format dễ nhìn
+                from datetime import datetime
+                dt = datetime.fromisoformat(index_row["updated_at"])
+                st.caption(f"🕒 Dữ liệu Cache cập nhật lúc: **{dt.strftime('%H:%M:%S - %d/%m/%Y')}** (Nhanh, không cần chờ API)")
+            except:
+                st.caption("🕒 Dữ liệu Cache: Đã có sẵn")
+        else:
+            st.warning("⚠️ Cache trống. Hãy chạy Market Streamer Daemon (src/workers/market_streamer.py) ở Background!")
+
     with col_btn:
-        if st.button("🔄 LẤY DỮ LIỆU MỚI", type="primary"):
+        if st.button("⚡ TẢI TỪ CACHE (INSTANT)", type="primary"):
             data = load_data()
             if data:
                 st.session_state.report_data = data
-                st.success("Đã lấy dữ liệu thành công!")
+                st.success("Tải xong trong 0.05s!")
             else:
-                st.error("Không lấy được dữ liệu. Kiểm tra lại kết nối/API.")
+                st.error("Không tải được dữ liệu, Cache rỗng.")
 
     # 2. FORM NHẬP LIỆU & HIỂN THỊ
     if st.session_state.report_data:
@@ -129,17 +144,27 @@ def main():
             # --------------------
 
             # --- SECTION 3: KHỐI NGOẠI ---
-            st.subheader("3. Giao dịch Khối ngoại")
+            st.subheader("3. Giao dịch Khối ngoại (Manual Overrides Allowed)")
             c_f1, c_f2 = st.columns([1, 2])
+            
             with c_f1:
-                st.metric(
-                    label="Trạng thái", 
-                    value=data.foreign.status, 
-                    delta=f"{data.foreign.net_value:,.2f} Tỷ"
-                )
+                # Allow user to override net value
+                st.write("**Trạng thái (Total Net Trading)**")
+                data.foreign.status = st.selectbox("Hướng giao dịch:", ["MUA RÒNG", "BÁN RÒNG"], index=0 if data.foreign.status == "MUA RÒNG" else 1)
+                data.foreign.net_value = st.number_input("Giá trị Net (Tỷ đồng):", value=float(data.foreign.net_value), step=10.0)
+                
             with c_f2:
-                st.info(f"**Top Mua:** {', '.join(data.foreign.top_buy)}")
-                st.warning(f"**Top Bán:** {', '.join(data.foreign.top_sell)}")
+                # Convert the comma-separated strings back to editable text areas
+                # so the user can easily format or change individual stocks and their values
+                top_buy_str = ", ".join(data.foreign.top_buy)
+                top_sell_str = ", ".join(data.foreign.top_sell)
+                
+                new_top_buy = st.text_input("Top Mua (Định dạng: HPG (+500 tỷ), FPT (+200 tỷ)): ", value=top_buy_str)
+                new_top_sell = st.text_input("Top Bán (Định dạng: VCB (-500 tỷ), VIC (-200 tỷ)): ", value=top_sell_str)
+                
+                # Re-assign back to data object
+                data.foreign.top_buy = [x.strip() for x in new_top_buy.split(",") if x.strip()]
+                data.foreign.top_sell = [x.strip() for x in new_top_sell.split(",") if x.strip()]
 
             st.markdown("---")
 

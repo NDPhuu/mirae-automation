@@ -21,10 +21,15 @@ class MarketIndex(BaseModel):
 
 # --- 2. DỮ LIỆU CHI TIẾT ---
 class StockData(BaseModel):
-    """Dùng để lưu giá của từng mã trong nhóm ngành"""
+    """Lưu giá và các chỉ số chuẩn hóa của từng mã chứng khoán"""
     symbol: str
     price: float
+    ref_price: float = 0.0
     change_percent: float
+    shares: int = 0
+    volume: int = 0
+    f_buy_val: float = 0.0
+    f_sell_val: float = 0.0
 
 class SectorPerformance(BaseModel):
     """Kết quả phân tích ngành"""
