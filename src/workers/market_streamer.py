@@ -8,6 +8,7 @@ import threading
 import paho.mqtt.client as mqtt
 import warnings
 import urllib3
+from datetime import datetime
 
 # Tắt các cảnh báo không quan trọng từ thư viện bên thứ 3
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -73,7 +74,6 @@ def start_dnse_mqtt_stream(symbols_list):
                         "price": payload.get("closePrice", 0.0),
                         "ref_price": payload.get("referencePrice", 0.0),
                         "change_percent": payload.get("changedRatio", 0.0),
-                        "shares": payload.get("listedShares", 0),
                         "volume": payload.get("totalVolumeTraded", 0)
                     })
                     # print(f"   -> {symbol} price updated")
@@ -94,9 +94,11 @@ def start_dnse_mqtt_stream(symbols_list):
     try:
         client.connect(dnse.MQTT_HOST, dnse.MQTT_PORT, 60)
         # Bật vòng lặp vĩnh viễn trong thread nội bộ của Paho
-        client.loop_start() 
+        client.loop_start()
+        return client
     except Exception as e:
         print(f"❌ Lỗi khởi động MQTT: {e}")
+        return None
 
 class SSIConfig:
     def __init__(self):
@@ -223,54 +225,84 @@ def initial_seed_data(symbols_list):
     else:
         print(f"❌ [CACHE] KHÔNG TÌM THẤY FILE: {cache_path}. Top Impact sẽ bị trống!")
 
-    # 3. Quét SSI lấy Foreign Trading + SEC Details (SLOW - MOVE TO BACKGROUND)
+    # 3. Quét SSI lấy Foreign Trading + SEC Details (OPTIMIZED)
     def ssi_background_fetch():
-        print("⏳ [SSI] Bắt đầu tải Dữ liệu Khối ngoại (Background - Sequential 7 mins)...")
+        now = datetime.now()
+        # SKIP: Nếu đang trong giờ giao dịch và đã có dữ liệu cache (EOD SSI không đổi trong ngày)
+        # Chỉ Force-run nếu là sáng sớm (1h-8h) hoặc sau phiên (16h-23h)
+        is_trading_hours = 9 <= now.hour < 16
+        
+        print(f"⏳ [SSI] Bắt đầu kiểm tra Dữ liệu Khối ngoại (Time: {now.strftime('%H:%M')})...")
+        
         ssi = SSIService()
         if ssi.login():
-            f_data = ssi.get_batch_foreign_data(symbols_list)
-            for sym, d in f_data.items():
+            # Tối ưu: Lấy danh sách mã ưu tiên (VN30 + High Impact)
+            # Giả định VN30 + mã cốt lõi (~50 mã)
+            vn30 = ["ACB","BCM","BID","BVH","CTG","FPT","GAS","GVR","HDB","HPG","MBB","MSN","MWG","PLX","POW","SAB","SHB","SSB","SSI","STB","TCB","TPB","VCB","VHM","VIC","VJC","VNM","VPB","VRE"]
+            
+            # Phase 1: Tier 1 (VN30 - Instant update)
+            print("🚀 [SSI] Tier 1: Ưu tiên VN30...")
+            f_data_tier1 = ssi.get_batch_foreign_data(vn30)
+            for sym, d in f_data_tier1.items():
                 db.upsert_stock(sym, {
                     "f_buy_val": d.get('f_buy_val', 0.0),
                     "f_sell_val": d.get('f_sell_val', 0.0)
-                })
-            print(f"✅ [SSI] Đã tải xong Khối ngoại cho {len(f_data)} mã.")
+                }, trading_date=d.get("trading_date"))
+            
+            # Phase 2: Tier 2 (Phần còn lại - Skip nếu đang trong giờ giao dịch)
+            if is_trading_hours:
+                print("⏭️ [SSI] Đang giờ giao dịch, bỏ qua Tier 2 để tiết kiệm tài nguyên (Dùng Cache).")
+                return
+
+            print("⏳ [SSI] Tier 2: Đang tải nốt phần còn lại của thị trường...")
+            remaining_symbols = [s for s in symbols_list if s not in vn30]
+            f_data_tier2 = ssi.get_batch_foreign_data(remaining_symbols)
+            for sym, d in f_data_tier2.items():
+                db.upsert_stock(sym, {
+                    "f_buy_val": d.get('f_buy_val', 0.0),
+                    "f_sell_val": d.get('f_sell_val', 0.0)
+                }, trading_date=d.get("trading_date"))
+            
+            print(f"✅ [SSI] Đã hoàn thành cập nhật Khối ngoại toàn thị trường.")
             
     # Chạy SSI fetch trong thread riêng để không block streamer startup
     threading.Thread(target=ssi_background_fetch, daemon=True).start()
 
-def main():
+def start_streams():
     print("========================================")
     print("    MIRAE MARKET STREAMER DAEMON        ")
     print("========================================")
     
-    # 1. Trích xuất toàn bộ Symbol từ SECTOR MAPPING
     all_symbols = []
     for symbols in SECTOR_MAPPING.values():
         all_symbols.extend(symbols)
     all_symbols = list(set(all_symbols))
-    print(f"Chuẩn bị streaming cho {len(all_symbols)} mã chứng khoán.")
     
-    # 2. Khởi tạo Database (Nếu chưa có)
+    # 1. Db Init (Starts Flusher thread)
     db.init_db()
     
-    # 3. Nạp dữ liệu mồi (Seed Data) vào Cache trước khi Streaming
+    # 2. Seed data (First run)
     initial_seed_data(all_symbols)
     
-    # 4. Khởi chạy luồng DNSE MQTT (Chạy ngầm trong background thread của Paho)
-    start_dnse_mqtt_stream(all_symbols)
+    # 3. Start streams
+    mqtt_client = start_dnse_mqtt_stream(all_symbols)
     
-    # 4. Khởi chạy vòng lặp SSI SignalR
-    # SignalR client (ssi_fc_data) block internally, so we use a thread.
     ssi_thread = threading.Thread(target=start_ssi_signalr_stream, daemon=True)
     ssi_thread.start()
     
-    # 5. Giữ Main Thread block để App không tắt
+    return mqtt_client
+
+def main():
+    mqtt_client = start_streams()
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n⏹️ Đang tắt Streamer Daemon...")
+        if mqtt_client:
+            mqtt_client.loop_stop()
+            mqtt_client.disconnect()
+        db.stop_flusher()
         sys.exit(0)
 
 if __name__ == "__main__":

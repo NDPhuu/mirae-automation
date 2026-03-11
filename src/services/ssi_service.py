@@ -85,8 +85,8 @@ class SSIService:
                 # API trả về key "data" (không phải "dataList")
                 data_list = resp_json.get("data") or resp_json.get("dataList") or []
                 if data_list:
-                    # Dữ liệu sắp xếp theo ngày tăng dần → phần tử cuối là phiên gần nhất
-                    return data_list[-1]
+                    # Dữ liệu sắp xếp theo ngày giảm dần → phần tử đầu tiên là phiên gần nhất
+                    return data_list[0]
             return None
         except Exception:
             return None
@@ -109,11 +109,22 @@ class SSIService:
                 try:
                     buy = float(data.get("ForeignBuyValTotal") or data.get("foreignbuyvaltotal") or 0)
                     sell = float(data.get("ForeignSellValTotal") or data.get("foreignsellvaltotal") or 0)
+                    raw_date = data.get("TradingDate") or data.get("tradingdate")
                     
+                    # Normalize DD/MM/YYYY to YYYY-MM-DD
+                    iso_date = None
+                    if raw_date:
+                        try:
+                            d, m, y = raw_date.split('/')
+                            iso_date = f"{y}-{m}-{d}"
+                        except Exception:
+                            pass
+
                     if buy > 0 or sell > 0:
                         results[sym] = {
                             "f_buy_val": buy,
-                            "f_sell_val": sell
+                            "f_sell_val": sell,
+                            "trading_date": iso_date
                         }
                     else:
                         zero_activity += 1
