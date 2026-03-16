@@ -70,9 +70,16 @@ def start_dnse_mqtt_stream(symbols_list):
             elif "stockinfo" in topic:
                 symbol = payload.get("symbol")
                 if symbol:
+                    ref_p = payload.get("referencePrice", 0.0)
+                    close_p = payload.get("closePrice")
+                    
+                    # Fallback if no trade yet
+                    if not close_p or close_p == 0:
+                        close_p = ref_p
+                        
                     db.upsert_stock(symbol, {
-                        "price": payload.get("closePrice", 0.0),
-                        "ref_price": payload.get("referencePrice", 0.0),
+                        "price": close_p,
+                        "ref_price": ref_p,
                         "change_percent": payload.get("changedRatio", 0.0),
                         "volume": payload.get("totalVolumeTraded", 0)
                     })

@@ -159,14 +159,25 @@ def flush_buffers():
                     conn.execute(st_query, st_params)
                     
                 if mp_params:
+                    # Logic UPSERT "Holy Grail":
+                    # 1. Khi INSERT: Nếu price là 0/NULL -> Dùng ref_price để tránh lỗi DB & -100%.
+                    # 2. Khi UPDATE trên dòng cũ: Nếu price mới là 0/NULL -> GIỮ NGUYÊN giá cũ (Không ghi đè).
+                    # 3. Volume: Luôn lấy giá trị lớn nhất (GREATEST) để tránh dữ liệu trễ.
                     mp_query = text("""
                         INSERT INTO market_prices (symbol, trading_date, price, ref_price, volume, updated_at)
-                        VALUES (:symbol, :trading_date, :price, :ref_price, :volume, :updated_at)
+                        VALUES (
+                            :symbol, 
+                            :trading_date, 
+                            COALESCE(NULLIF(:price, 0), :ref_price), 
+                            :ref_price, 
+                            :volume, 
+                            :updated_at
+                        )
                         ON CONFLICT (symbol, trading_date) DO UPDATE SET
-                            price=COALESCE(EXCLUDED.price, market_prices.price),
-                            ref_price=COALESCE(EXCLUDED.ref_price, market_prices.ref_price),
-                            volume=COALESCE(EXCLUDED.volume, market_prices.volume),
-                            updated_at=EXCLUDED.updated_at
+                            price = COALESCE(NULLIF(EXCLUDED.price, 0), market_prices.price),
+                            ref_price = COALESCE(NULLIF(EXCLUDED.ref_price, 0), market_prices.ref_price),
+                            volume = GREATEST(market_prices.volume, EXCLUDED.volume),
+                            updated_at = EXCLUDED.updated_at
                     """)
                     conn.execute(mp_query, mp_params)
                     
