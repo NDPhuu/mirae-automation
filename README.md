@@ -1,11 +1,11 @@
-# 📈 Mirae Asset Daily Report Automation (Ver 2.0.0)
+# 📈 Mirae Asset Daily Report Automation (Ver 2.1.0)
 
-Hệ thống tự động hóa tổng hợp dữ liệu thị trường và hỗ trợ viết báo cáo nhận định hàng ngày.
-Automated market data aggregation and daily report generation support system.
+Hệ thống tự động hóa tổng hợp dữ liệu thị trường và hỗ trợ viết báo cáo nhận định chuyên sâu.
+Automated market data aggregation and professional finance report generation system.
 
 ---
 
-## 🖼️ Project Gallery
+## Project Gallery
 
 ![Market Overview](prj_img/MarketOverview_ver2_Updating.png)
 *Giao diện Dashboard theo dõi thị trường thời gian thực / Real-time Market Dashboard*
@@ -15,65 +15,80 @@ Automated market data aggregation and daily report generation support system.
 
 ---
 
-## 🇻🇳 Tiếng Việt
-
-### 1. Giới thiệu
-Dự án giúp tự động hóa việc thu thập số liệu thị trường chứng khoán Việt Nam và hỗ trợ viết báo cáo hàng ngày. Hệ thống lấy dữ liệu trực tiếp từ các nguồn uy tín (SSI/DNSE), tính toán các chỉ số quan trọng và sử dụng AI để tạo văn bản nhận định.
-
-### 2. Tính năng chính
-- **Dữ liệu thời gian thực:** Kết nối DNSE API để lấy giá, khối lượng và độ rộng thị trường.
-- **Top Tác động:** Tính toán chính xác mức độ đóng góp của cổ phiếu vào VN-Index (Point-based).
-- **Khối ngoại:** Tự động lấy dữ liệu mua bán ròng từ SSI.
-- **Hỗ trợ AI:** Sử dụng Google Gemini để viết nhận định thị trường dựa trên số liệu thực tế và các mẫu báo cáo cũ (RAG).
-- **Session Update:** Cập nhập dữ liệu real-time trong phiên.
-- **Supabase Cloud:** Sử dụng PostgreSQL từ Supabase làm cơ sở dữ liệu chính để lưu trữ giá cổ phiếu, khối ngoại và chỉ số thị trường.
-
-### 3. Kiến trúc hệ thống
+## Kiến trúc hệ thống / System Architecture
 
 ```mermaid
 graph TD
-    A[Data Sources: DNSE/SSI] -->|Market Data| B[Python Backend]
+    A[Data Sources: DNSE/SSI] -->|Market Data| B[FastAPI Backend]
     B -->|Upsert Data| C[(Supabase DB)]
     C -->|Fetch Context| D[RAG Engine]
     D -->|Prompts| E[Gemini AI]
-    E -->|Reports| F[Streamlit Dashboard]
-    B -->|API Requests| F
+    F[Next.js Frontend] -->|API Requests| B
+    B -->|JSON Response| F
 ```
 
-*Hệ thống lấy dữ liệu real-time từ DNSE và SSI, xử lý và lưu trữ vào Supabase PostgreSQL. Gemini AI hỗ trợ viết báo cáo nhận định, hiển thị trên Dashboard Streamlit.*
+---
+
+## 🇻🇳 Tiếng Việt
+
+### 1. Giới thiệu
+Hệ thống hiện đại tích hợp AI để tự động hóa quy trình phân tích thị trường chứng khoán. Dự án đã chuyển đổi sang kiến trúc decoupled hoàn toàn với Frontend riêng biệt để tối ưu trải nghiệm người dùng.
+
+### 2. Công nghệ sử dụng
+- **Frontend:** Next.js 15+ (React 19), Tailwind CSS 4.
+- **Backend:** Python FastAPI.
+- **Database:** Supabase (PostgreSQL) Cloud.
+- **AI/RAG:** Google Gemini + ChromaDB + BGE-M3 Embedding.
+
+### 3. Tính năng chính
+- **Real-time Dashboard:** Theo dõi giá, khối lượng và độ rộng thị trường trực tiếp.
+- **Top Tác động:** Phân tích đóng góp điểm số VN-Index (Point-based).
+- **Khối ngoại:** Tự động lấy dữ liệu giao dịch ròng từ SSI.
+- **AI Report:** Tự động tạo bản thảo báo cáo nhận định chuyên nghiệp dựa trên dữ liệu thực tế và mẫu báo cáo cũ.
 
 ### 4. Cài đặt nhanh
-1. Cài đặt Python 3.10+ và Poetry.
-2. Clone dự án và chạy `poetry install`.
-3. Cấu hình API Key (DNSE, SSI, Gemini) trong file `.env`.
-4. Chạy Dashboard: `poetry run streamlit run src/ui/dashboard.py`.
+#### Backend
+1. Clone dự án và chạy `poetry install`.
+2. Cấu hình file `.env`.
+3. Chạy Server: `poetry run uvicorn src.api.main:app --reload`.
+
+#### Frontend
+1. Truy cập thư mục `frontend/`.
+2. Chạy `npm install`.
+3. Khởi động: `npm run dev`.
 
 ---
 
 ## 🇬🇧 English
 
 ### 1. Introduction
-This project automates the aggregation of Vietnamese stock market data and assists in writing daily market reports. The system fetches data directly from reliable sources, calculates key metrics, and uses AI to generate market commentary.
+A modern AI-integrated system to automate stock market analysis workflows. The project has transitioned to a professional decoupled architecture with a dedicated frontend.
 
-### 2. Key Features
-- **Real-time Data:** Connects to DNSE API for live prices, volume, and market breadth.
-- **Market Impact:** Accurately calculates stock contributions to the VN-Index (Point-based).
-- **Foreign Trading:** Automatically fetches net buy/sell data from SSI.
-- **AI Support:** Uses Google Gemini to write market reports based on live data and historical templates (RAG).
-- **Session Guard:** Smart session management that transitions data at 09:15 AM.
-- **Supabase Cloud:** Uses Supabase's PostgreSQL as the primary database for storing stock prices, foreign trading data, and market indices.
+### 2. Tech Stack
+- **Frontend:** Next.js 15+ (React 19), Tailwind CSS 4.
+- **Backend:** Python FastAPI.
+- **Database:** Supabase (PostgreSQL) Cloud.
+- **AI/RAG:** Google Gemini + ChromaDB + BGE-M3 Embedding.
 
-### 3. Architecture
-....
+### 3. Key Features
+- **Real-time Dashboard:** Live tracking of prices, volume, and market breadth.
+- **Market Impact:** Accurate point-based contribution analysis for VN-Index.
+- **Foreign Trading:** Synchronized net buy/sell data fetching.
+- **AI Report:** Generates professional-grade market commentary using live data and historical templates.
 
 ### 4. Quick Start
-1. Install Python 3.10+ and Poetry.
-2. Clone the repository and run `poetry install`.
-3. Configure API Keys (DNSE, SSI, Gemini) in the `.env` file.
-4. Run the Dashboard: `poetry run streamlit run src/ui/dashboard.py`.
+#### Backend
+1. Clone the repository and run `poetry install`.
+2. Configure your `.env` file.
+3. Run Server: `poetry run uvicorn src.api.main:app --reload`.
+
+#### Frontend
+1. Navigate to `frontend/` directory.
+2. Run `npm install`.
+3. Run Development: `npm run dev`.
 
 ---
 
 ## 📝 Ghi chú / Note
-Dự án này là công cụ hỗ trợ cá nhân, không phải sản phẩm chính thức.
-This project is a personal support tool, not an official product.
+Dự án này là công cụ hỗ trợ cho việc phân tích, không phải sản phẩm chính thức.
+This project is a dedicated tool for analyzing, not an official product.
