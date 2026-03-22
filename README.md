@@ -1,7 +1,6 @@
-# 📈 Mirae Asset Daily Report Automation (Ver 2.1.0)
-
-Hệ thống tự động hóa tổng hợp dữ liệu thị trường và hỗ trợ viết báo cáo nhận định thị trường.
-Automated market data aggregation and daily report generation support system.
+# Mirae Asset Daily Report Automation (Ver 2.2.5)
+ 
+ - *Hệ thống tự động hóa tổng hợp dữ liệu thị trường và hỗ trợ viết báo cáo nhận định thị trường (Automated market data aggregation and daily report generation support system).*
 
 ---
 
