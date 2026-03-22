@@ -35,11 +35,23 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+@app.get("/", tags=["System"])
+def root():
+    """Trang chủ chào mừng."""
+    return {
+        "message": "Mirae Asset Automation API is running!",
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 # CORS middleware for Next.js frontend calls
 origins = ["http://localhost:3000"]
-frontend_url = os.getenv("mirae-automation.vercel.app")
+frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    origins.append(frontend_url)
+    # Ensure it supports both with/without trailing slash
+    origins.append(frontend_url.rstrip("/"))
+    origins.append(frontend_url.rstrip("/") + "/")
 
 app.add_middleware(
     CORSMiddleware,
