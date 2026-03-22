@@ -13,4 +13,3 @@ process_pdfs.py
 *.md
 # *.json
 *.csv
-data_json/

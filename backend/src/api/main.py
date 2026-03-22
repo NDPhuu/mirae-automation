@@ -37,7 +37,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS middleware for Next.js frontend calls
 origins = ["http://localhost:3000"]
-frontend_url = os.getenv("FRONTEND_URL")
+frontend_url = os.getenv("mirae-automation.vercel.app")
 if frontend_url:
     origins.append(frontend_url)
 
