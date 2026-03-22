@@ -11,5 +11,6 @@ chroma_db/
 process_pdfs.py
 .agent
 *.md
-*.json
+# *.json
 *.csv
+data_json/
