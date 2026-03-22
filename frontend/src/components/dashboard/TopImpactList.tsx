@@ -8,7 +8,7 @@ export default function TopImpactList() {
   const { data, isLoading, error, mutate } = useTopImpact();
 
   if (error) return <ErrorCard message="Failed to load Top Impact" onRetry={mutate} />;
-  
+
   if (isLoading || !data) return (
     <div className="bg-panel border border-zinc-800 rounded-lg shadow-md p-4 h-full flex flex-col gap-3">
       <Skeleton className="h-6 w-1/3 mb-2" />
@@ -26,10 +26,10 @@ export default function TopImpactList() {
   return (
     <div className="bg-panel border border-zinc-800 rounded-lg shadow-md flex flex-col h-full">
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-        <h3 className="font-bold text-zinc-100">Top Tác động VN-Index</h3>
+        <h3 className="font-bold text-zinc-100">Top tác động VN-Index</h3>
         <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Đơn vị: Điểm</span>
       </div>
-      
+
       <div className="grid grid-cols-2 divide-x divide-zinc-800 flex-1 p-2">
         {/* Positive Impact */}
         <div className="pr-2 space-y-1">
@@ -37,8 +37,8 @@ export default function TopImpactList() {
           {data.positive.map((item) => (
             <div key={item.symbol} className="relative flex items-center justify-between px-2 py-1.5 hover:bg-zinc-800/80 rounded transition-colors group overflow-hidden">
               {/* Background Progress Bar */}
-              <div 
-                className="absolute inset-y-0 left-0 bg-market-up/10 -z-0 transition-all duration-500" 
+              <div
+                className="absolute inset-y-0 left-0 bg-market-up/10 -z-0 transition-all duration-500"
                 style={{ width: `${(Math.abs(item.impact_value) / maxPos) * 100}%` }}
               />
               <div className="flex flex-col z-10">
@@ -59,8 +59,8 @@ export default function TopImpactList() {
           {data.negative.map((item) => (
             <div key={item.symbol} className="relative flex items-center justify-between px-2 py-1.5 hover:bg-zinc-800/80 rounded transition-colors group overflow-hidden">
               {/* Background Progress Bar (Right Aligned) */}
-              <div 
-                className="absolute inset-y-0 right-0 bg-market-down/10 -z-0 transition-all duration-500" 
+              <div
+                className="absolute inset-y-0 right-0 bg-market-down/10 -z-0 transition-all duration-500"
                 style={{ width: `${(Math.abs(item.impact_value) / maxNeg) * 100}%` }}
               />
               <div className="flex flex-col z-10">

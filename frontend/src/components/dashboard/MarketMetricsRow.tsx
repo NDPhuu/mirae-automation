@@ -12,9 +12,9 @@ export default function MarketMetricsRow() {
   if (overview.error || foreign.error) return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div className="col-span-full h-32">
-        <ErrorCard 
-          message="Failed to load market metrics" 
-          onRetry={() => { overview.mutate(); foreign.mutate(); }} 
+        <ErrorCard
+          message="Failed to load market metrics"
+          onRetry={() => { overview.mutate(); foreign.mutate(); }}
         />
       </div>
     </div>
@@ -31,15 +31,13 @@ export default function MarketMetricsRow() {
   const data = overview.data;
   const isUp = (data.change_point ?? 0) >= 0;
 
-  // Calculate Foreign Net Value from the top buy/sell limits.
-  // Ideally, this should come from a dedicated total metric from backend.
-  const f_net = foreign.data.top_buy.reduce((acc, curr) => acc + curr.net_val, 0) + 
-                foreign.data.top_sell.reduce((acc, curr) => acc + curr.net_val, 0);
+  // Read True Foreign Net Value globally from backend
+  const f_net = foreign.data.total_net_val;
   const isForeignBuy = f_net >= 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      
+
       {/* 1. VN-Index Card */}
       <div className="bg-panel border border-zinc-800 shadow-md rounded-lg p-5 flex flex-col justify-center">
         <div className="flex items-center justify-between mb-2">
@@ -74,7 +72,7 @@ export default function MarketMetricsRow() {
         </div>
         <div className="mt-1 text-xs text-zinc-500 flex justify-between">
           <span>Khối lượng:</span>
-          <span className="text-zinc-300 font-medium">{(data.total_volume ?? 0).toLocaleString()} Tr. CP</span>
+          <span className="text-zinc-300 font-medium">{(data.total_volume ?? 0).toLocaleString()} CP</span>
         </div>
       </div>
 
@@ -84,13 +82,13 @@ export default function MarketMetricsRow() {
           <TrendingUp className="w-4 h-4 text-zinc-500" />
           <h2 className="text-sm font-semibold text-zinc-400">Độ rộng thị trường</h2>
         </div>
-        
+
         <div className="flex justify-between text-xs font-semibold mb-1">
           <span className="text-market-up">{(data.breadth_ceiling || 0) + (data.breadth_green || 0)}</span>
           <span className="text-market-ref">{data.breadth_yellow}</span>
           <span className="text-market-down">{(data.breadth_floor || 0) + (data.breadth_red || 0)}</span>
         </div>
-        
+
         <div className="flex h-2 rounded-full overflow-hidden opacity-90 w-full mb-1 border border-zinc-800">
           <div style={{ flex: (data.breadth_ceiling || 0) + (data.breadth_green || 0) }} className="bg-market-up" />
           <div style={{ flex: (data.breadth_yellow || 0) }} className="bg-market-ref" />
@@ -102,7 +100,7 @@ export default function MarketMetricsRow() {
       <div className="bg-panel border border-zinc-800 shadow-md rounded-lg p-5 flex flex-col justify-center">
         <div className="flex items-center gap-2 mb-2">
           <Globe className="w-4 h-4 text-zinc-500" />
-          <h2 className="text-sm font-semibold text-zinc-400">Giao dịch Khối ngoại</h2>
+          <h2 className="text-sm font-semibold text-zinc-400">Giao dịch khối ngoại</h2>
         </div>
         <div className="flex items-end justify-between">
           <span className={`text-2xl font-bold tracking-tight ${isForeignBuy ? 'text-market-up' : 'text-market-down'}`}>

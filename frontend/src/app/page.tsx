@@ -9,8 +9,8 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-background text-foreground p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
       <header className="flex flex-col gap-1 pb-4 border-b border-zinc-800">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Mirae Asset Analyst Dashboard</h1>
-        <p className="text-sm text-zinc-500">Professional Financial Terminal & AI Insights generated in real-time.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Analyst Dashboard</h1>
+        <p className="text-sm text-zinc-500">Professional financial terminal & AI insights generated in real-time.</p>
       </header>
 
       {/* Row 1: Top 4 Metrics */}
@@ -42,13 +42,13 @@ export default function DashboardPage() {
       {/* AI Report Generation Layer */}
       <section className="pb-16">
         <header className="mb-4">
-          <h2 className="text-xl font-bold text-zinc-100">Daily Report Generator (AIEngine)</h2>
-          <p className="text-sm text-zinc-500">Provide expert context and let the system generate the narrative.</p>
+          <h2 className="text-xl font-bold text-zinc-100">Daily Report Generator</h2>
+          <p className="text-sm text-zinc-500">Cung cấp nhận định của Analyst để hệ thống tự động tạo nội dung báo cáo.</p>
         </header>
 
         <ReportGenerator />
       </section>
-      
+
     </main>
   );
 }

@@ -40,7 +40,7 @@ export default function ReportGenerator() {
   const handleGenerate = async (data: JudgmentData) => {
     setIsGenerating(true);
     setReportMarkdown(null); // clear previous to show loading state
-    
+
     try {
       const response = await api.post("/report/generate", {
         manual_override: data,
@@ -59,17 +59,17 @@ export default function ReportGenerator() {
       <div className="lg:col-span-1">
         <ExpertJudgmentForm onSubmit={handleGenerate} isGenerating={isGenerating} />
       </div>
-      
+
       <div className="lg:col-span-2 flex flex-col h-full">
         {/* Output Toolbar */}
         <div className="bg-[#1a1a1a] border border-zinc-800 rounded-t-lg p-3 flex justify-between items-center shadow-md">
           <h3 className="font-bold text-zinc-100 flex items-center gap-2">
-            Generated Report Output
+            Generated Report
             {reportMarkdown && <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>}
           </h3>
-          
+
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={handleCopy}
               disabled={!reportMarkdown || isGenerating}
               title="Copy straight to Zalo (No Markdown)"
@@ -78,7 +78,7 @@ export default function ReportGenerator() {
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied!" : "Copy"}
             </button>
-            <button 
+            <button
               onClick={handleExportWord}
               disabled={!reportMarkdown || isGenerating}
               title="Export to Word (.docx)"
@@ -92,7 +92,7 @@ export default function ReportGenerator() {
 
         {/* Output Content Field */}
         <div className="bg-panel border border-t-0 border-zinc-800 rounded-b-lg p-8 flex-1 min-h-[400px] shadow-md overflow-y-auto relative">
-          
+
           {isGenerating && (
             <div className="absolute inset-0 z-10 bg-panel/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300 rounded-b-lg">
               <div className="relative flex items-center justify-center mb-4">
@@ -109,8 +109,8 @@ export default function ReportGenerator() {
               <ReactMarkdown>{reportMarkdown}</ReactMarkdown>
             </article>
           ) : !isGenerating && (
-            <div className="h-full flex items-center justify-center text-zinc-600 italic">
-              Awaiting generation... Submit analyst judgment to start.
+            <div className="h-full flex items-center justify-center text-zinc-300 italic">
+              Đang chờ tạo… Hãy nhập đánh giá của Analyst để bắt đầu.
             </div>
           )}
         </div>

@@ -56,6 +56,7 @@ export interface ForeignTradeMetric {
 export interface ForeignTradingData {
   top_buy: ForeignTradeMetric[];
   top_sell: ForeignTradeMetric[];
+  total_net_val: number;
 }
 
 // Global Poll Interval

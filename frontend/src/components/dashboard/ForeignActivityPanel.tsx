@@ -11,16 +11,16 @@ export default function ForeignActivityPanel() {
   return (
     <div className="bg-panel border border-panel-border rounded-lg shadow-xl overflow-hidden flex flex-col">
       <div className="p-4 border-b border-panel-border bg-[#1a1a1a] flex justify-between items-center">
-        <h3 className="font-bold text-gray-200">Foreign Activity (Net Value)</h3>
+        <h3 className="font-bold text-gray-200">Top cổ phiếu khối ngoại Mua/Bán</h3>
         {data.top_buy.length > 0 && (
           <span className="text-[10px] text-zinc-500 font-mono">Session: {data.top_buy[0].trading_date}</span>
         )}
       </div>
-      
+
       <div className="flex-1 divide-y divide-panel-border">
-        {/* Top Buy */}
+        {/* Top Mua */}
         <div className="p-3">
-          <div className="text-xs font-semibold text-market-up mb-2 uppercase tracking-tight">Top Buy</div>
+          <div className="text-xs font-semibold text-market-up mb-2 uppercase tracking-tight">Top Mua</div>
           <div className="space-y-2">
             {data.top_buy.slice(0, 6).map((item) => (
               <div key={item.symbol} className="flex items-center justify-between text-sm">
@@ -35,9 +35,9 @@ export default function ForeignActivityPanel() {
           </div>
         </div>
 
-        {/* Top Sell */}
+        {/* Top Bán */}
         <div className="p-3">
-          <div className="text-xs font-semibold text-market-down mb-2 uppercase tracking-tight">Top Sell</div>
+          <div className="text-xs font-semibold text-market-down mb-2 uppercase tracking-tight">Top Bán</div>
           <div className="space-y-2">
             {data.top_sell.slice(0, 6).map((item) => (
               <div key={item.symbol} className="flex items-center justify-between text-sm">
