@@ -41,7 +41,7 @@ async def generate_report(request: Request, payload: ReportGenerateRequest, db: 
     
     def _fetch_sectors():
         with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT sector, avg_change, total_stocks FROM sector_performance_metrics WHERE trading_date = :d"), {"d": t_date}).fetchall()
+            return local_db.execute(text("SELECT sector, avg_change, total_stocks, top_symbols FROM sector_performance_metrics WHERE trading_date = :d ORDER BY avg_change DESC"), {"d": t_date}).fetchall()
             
     def _fetch_foreign_totals():
         with SessionLocal() as local_db:
@@ -70,15 +70,26 @@ async def generate_report(request: Request, payload: ReportGenerateRequest, db: 
     impact_pos = [f"{r.symbol} (+{r.change_percent}%)" for r in pos_rows]
     impact_neg = [f"{r.symbol} ({r.change_percent}%)" for r in neg_rows]
 
-    # 3. Process Sectors
+    # 3. Process Sectors (Top 3 Gainers & Top 3 Losers)
+    valid_sectors = [sr for sr in sector_rows if sr.sector]
+    top_3_gainers = valid_sectors[:3]
+    top_3_losers = valid_sectors[-3:] if len(valid_sectors) >= 6 else valid_sectors[3:]
+    
     sectors_data = []
-    for sr in sector_rows:
+    for sr in top_3_gainers + top_3_losers:
         status = "Tích cực" if sr.avg_change > 0 else "Tiêu cực" if sr.avg_change < 0 else "Phân hóa"
+        
+        symbols_str = sr.top_symbols or ""
+        symbols_list = [s.strip() for s in symbols_str.split(",") if s.strip()]
+        
+        gainers = symbols_list if status == "Tích cực" else []
+        losers = symbols_list if status == "Tiêu cực" else []
+        
         sectors_data.append(SectorPerformance(
             name=sr.sector,
             avg_change=float(sr.avg_change),
-            top_gainers=[],
-            top_losers=[],
+            top_gainers=gainers,
+            top_losers=losers,
             status=status
         ))
 
@@ -106,8 +117,8 @@ async def generate_report(request: Request, payload: ReportGenerateRequest, db: 
     f_trading = ForeignTrading(
         status=f_status,
         net_value=abs(f_net) / 1e9,
-        top_buy=[f"{r.symbol} (+{r.net_val / 1e9:,.0f} tỷ đồng)" for r in top_buy_rows],
-        top_sell=[f"{r.symbol} ({r.net_val / 1e9:,.0f} tỷ đồng)" for r in top_sell_rows]
+        top_buy=[f"{r.symbol} (+{float(r.net_val) / 1e9:,.0f} tỷ đồng)" for r in top_buy_rows],
+        top_sell=[f"{r.symbol} (-{float(r.net_val) / 1e9:,.0f} tỷ đồng)" for r in top_sell_rows]
     )
 
     # Values that can be overridden by user
