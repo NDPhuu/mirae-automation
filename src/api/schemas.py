@@ -44,6 +44,7 @@ class ForeignTradeMetric(BaseModel):
 class ForeignTradingResponse(BaseModel):
     top_buy: List[ForeignTradeMetric]
     top_sell: List[ForeignTradeMetric]
+    total_net_val: float
 
 class SectorPerformanceMetric(BaseModel):
     trading_date: date

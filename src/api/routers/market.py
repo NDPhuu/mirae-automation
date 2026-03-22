@@ -10,8 +10,13 @@ from src.api.schemas import (
     ForeignTradingResponse,
     SectorPerformanceResponse
 )
+from src.cache.state import SYSTEM_STATUS
 
-router = APIRouter(prefix="/api/v1", tags=["Market"])
+router = APIRouter(prefix="/api/v1", tags=["Market Data"])
+
+@router.get("/system/status")
+def get_system_status():
+    return SYSTEM_STATUS
 
 @router.get("/overview", response_model=IndexOverviewResponse)
 def get_overview(db: Session = Depends(get_db)):
@@ -73,14 +78,23 @@ def get_top_impact(limit: int = 10, db: Session = Depends(get_db)):
 @router.get("/foreign-trading", response_model=ForeignTradingResponse)
 def get_foreign_trading(limit: int = 10, db: Session = Depends(get_db)):
     """Lấy top mua/bán ròng của khối ngoại (ngày đầy đủ nhất)."""
-    active_date = get_active_session_date(db)
+    # Use max trading_date from foreign_trading specifically to handle weekends/delays
+    from sqlalchemy.sql import func
+    active_date = db.query(func.max(ForeignTrading.trading_date)).scalar()
     
+    if not active_date:
+        return {"top_buy": [], "top_sell": [], "total_net_val": 0.0}
+
     top_buy = db.query(ForeignTrading).filter(ForeignTrading.trading_date == active_date).order_by(desc(ForeignTrading.net_val)).limit(limit).all()
     top_sell = db.query(ForeignTrading).filter(ForeignTrading.trading_date == active_date).order_by(asc(ForeignTrading.net_val)).limit(limit).all()
     
+    b = db.execute(text("SELECT SUM(f_buy_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0.0
+    s = db.execute(text("SELECT SUM(f_sell_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0.0
+    
     return {
         "top_buy": top_buy,
-        "top_sell": top_sell
+        "top_sell": top_sell,
+        "total_net_val": float(b - s)
     }
 
 @router.get("/sector-performance", response_model=SectorPerformanceResponse)

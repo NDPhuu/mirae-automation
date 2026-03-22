@@ -1,10 +1,16 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Depends, Security, HTTPException, status
+from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from src.api.routers import market, report
 from src.scheduler import start_scheduler
 from src.workers.market_streamer import start_streams
 from src.cache import db
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from src.api.dependencies import limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,7 +32,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-import os
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS middleware for Next.js frontend calls
 origins = ["http://localhost:3000"]
@@ -42,8 +49,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(market.router)
-app.include_router(report.router)
+api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
+def get_api_key(api_key: str = Security(api_key_header)):
+    expected_key = os.getenv("API_SECRET_KEY", "mirae-dev-key")
+    if not api_key or api_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key"
+        )
+    return api_key
+
+app.include_router(market.router, dependencies=[Depends(get_api_key)])
+app.include_router(report.router, dependencies=[Depends(get_api_key)])
 
 @app.get("/health", tags=["System"])
 def health_check():

@@ -14,24 +14,69 @@ def poll_market_data():
     print("🔄 [Scheduler] Chạy cron job: Lấy dữ liệu DNSE/SSI...")
     initial_seed_data(all_symbols)
 
+import os
+import pandas as pd
+import boto3
+from datetime import datetime, timedelta
+from io import BytesIO
+
+def get_r2_client():
+    return boto3.client(
+        service_name='s3',
+        endpoint_url=os.getenv("R2_ENDPOINT_URL"),
+        aws_access_key_id=os.getenv("R2_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("R2_SECRET_ACCESS_KEY"),
+        region_name="auto"
+    )
+
 def cleanup_old_data():
     if not engine:
         print("❌ [Scheduler] Không có kết nối Database để dọn rác!")
         return
 
-    print("🧹 [Scheduler] Chạy cron job: Dọn dẹp dữ liệu cũ (Quá 30 ngày)...")
-    with engine.begin() as conn:
-        cleanup_queries = [
-            "DELETE FROM market_prices WHERE trading_date < CURRENT_DATE - 30",
-            "DELETE FROM foreign_trading WHERE trading_date < CURRENT_DATE - 30",
-            "DELETE FROM index_snapshot WHERE trading_date < CURRENT_DATE - 30"
-        ]
-        total_deleted = 0
-        for q in cleanup_queries:
-            res = conn.execute(text(q))
-            total_deleted += res.rowcount
+    print("🧹 [Scheduler] Bắt đầu quá trình lưu trữ R2 và dọn dẹp dữ liệu cũ (Quá 30 ngày)...")
+    bucket_name = os.getenv("R2_BUCKET_NAME", "mirae-archive")
+    thirty_days_ago = (datetime.now() - timedelta(days=30)).date()
+    
+    tables = ["market_prices", "foreign_trading", "index_snapshot"]
+    total_deleted = 0
+    
+    try:
+        # Tùy chọn: dùng AWS/S3 API nếu không có R2_ENDPOINT_URL
+        s3 = get_r2_client() if os.getenv("R2_ENDPOINT_URL") else None
+        
+        for table in tables:
+            query = f"SELECT * FROM {table} WHERE trading_date < '{thirty_days_ago.isoformat()}'"
+            df = pd.read_sql_query(query, engine)
             
-        print(f"✅ [Scheduler] Đã xóa {total_deleted} bản ghi cũ.")
+            if not df.empty:
+                if s3:
+                    # Convert date column to string for parquet compatibility
+                    df['trading_date'] = df['trading_date'].astype(str)
+                    
+                    # Save to parquet in memory
+                    out_buffer = BytesIO()
+                    df.to_parquet(out_buffer, index=False)
+                    out_buffer.seek(0)
+                    
+                    # Upload to R2
+                    object_key = f"archive/{table}/{table}_{thirty_days_ago.isoformat()}_{int(datetime.now().timestamp())}.parquet"
+                    s3.upload_fileobj(out_buffer, bucket_name, object_key)
+                    print(f"📦 [Archive] Đã upload {len(df)} dòng của {table} lên R2 ({object_key})")
+                else:
+                    print(f"⚠️ [Archive] R2 credentials missing. Skipping cloud backup for {table}.")
+
+                # After successful upload (or skip), delete from database
+                with engine.begin() as conn:
+                    delete_q = f"DELETE FROM {table} WHERE trading_date < '{thirty_days_ago.isoformat()}'"
+                    res = conn.execute(text(delete_q))
+                    total_deleted += res.rowcount
+            else:
+                print(f"📦 [Archive] {table}: Không có dữ liệu cũ cần dọn.")
+                
+        print(f"✅ [Scheduler] Đã hoàn tất, tổng xóa {total_deleted} bản ghi cũ.")
+    except Exception as e:
+        print(f"❌ [Scheduler] Lỗi trong quá trình Archive/Delete: {e}")
 
 def start_scheduler():
     scheduler = BackgroundScheduler()

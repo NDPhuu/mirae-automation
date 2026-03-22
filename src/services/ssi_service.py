@@ -91,7 +91,7 @@ class SSIService:
         except Exception:
             return None
 
-    def get_batch_foreign_data(self, symbols: List[str]) -> Dict[str, dict]:
+    def get_batch_foreign_data(self, symbols: List[str], progress_callback=None) -> Dict[str, dict]:
         """
         Lấy dữ liệu khối ngoại cho danh sách mã.
         Giá trị trả về ở đơn vị VND gốc (chưa chia).
@@ -133,6 +133,9 @@ class SSIService:
             else:
                 missing_data += 1
             
+            if progress_callback:
+                progress_callback(i + 1, len(symbols))
+
             if (i + 1) % 50 == 0:
                 print(f"   ... SSI Foreign Data: Đã tải {i+1}/{len(symbols)} mã (Thành công: {len(results)}, Zero: {zero_activity}, Lỗi: {api_errors + missing_data})...")
             

@@ -257,13 +257,28 @@ def initial_seed_data(symbols_list):
                 }, trading_date=d.get("trading_date"))
             
             # Phase 2: Tier 2 (Phần còn lại - Skip nếu đang trong giờ giao dịch)
+            # Removed the blind `is_trading_hours` return here because if the server restarts during trading hours,
+            # Tier 2 data will be missing entirely until 16:00. This caused missing MCH, BSR, etc.
             if is_trading_hours:
-                print("⏭️ [SSI] Đang giờ giao dịch, bỏ qua Tier 2 để tiết kiệm tài nguyên (Dùng Cache).")
-                return
+                print("⏭️ [SSI] Đang giờ giao dịch. Vẫn tiến hành tải Tier 2 để đảm bảo không bị thiếu dữ liệu do restart.")
 
             print("⏳ [SSI] Tier 2: Đang tải nốt phần còn lại của thị trường...")
             remaining_symbols = [s for s in symbols_list if s not in vn30]
-            f_data_tier2 = ssi.get_batch_foreign_data(remaining_symbols)
+            
+            from src.cache.state import SYSTEM_STATUS
+            SYSTEM_STATUS["state"] = "SYNCING"
+            SYSTEM_STATUS["message"] = "Đang tải dữ liệu tĩnh..."
+            
+            def ssi_progress(current, total):
+                SYSTEM_STATUS["progress"] = current
+                SYSTEM_STATUS["total"] = total
+                SYSTEM_STATUS["message"] = f"Đang đồng bộ dữ liệu Khối Ngoại ({current}/{total})..."
+                
+            f_data_tier2 = ssi.get_batch_foreign_data(remaining_symbols, progress_callback=ssi_progress)
+            
+            SYSTEM_STATUS["state"] = "READY"
+            SYSTEM_STATUS["message"] = "Cập nhật dữ liệu thành công."
+            
             for sym, d in f_data_tier2.items():
                 db.upsert_stock(sym, {
                     "f_buy_val": d.get('f_buy_val', 0.0),
