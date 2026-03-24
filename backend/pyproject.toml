@@ -11,7 +11,6 @@ python = "^3.11"
 pandas = ">=2.2.0"
 pydantic = ">=2.0.0"
 python-dotenv = ">=1.0.0"
-google-generativeai = ">=0.8.0"
 vnstock = ">=3.0.0"
 requests = ">=2.31.0"
 paho-mqtt = ">=2.0.0"
@@ -32,7 +31,9 @@ slowapi = ">=0.1.0"
 boto3 = ">=1.34.0"
 pyarrow = ">=15.0.0"
 urllib3 = "<2.0.0"
+protobuf = "3.20.3"
 torch = {version = "^2.2.0", source = "pytorch-cpu"}
+google-genai = "^1.68.0"
 
 [[tool.poetry.source]]
 name = "pytorch-cpu"

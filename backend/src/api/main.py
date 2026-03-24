@@ -45,13 +45,11 @@ def root():
         "health": "/health"
     }
 
-# CORS middleware for Next.js frontend calls
+# CORS middleware
 origins = ["http://localhost:3000"]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    # Ensure it supports both with/without trailing slash
-    origins.append(frontend_url.rstrip("/"))
-    origins.append(frontend_url.rstrip("/") + "/")
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

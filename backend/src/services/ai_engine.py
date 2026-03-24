@@ -5,7 +5,7 @@ import os
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 # ----------------------------
 
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from src.models import DailyReportInput
 from src.services.rag_service import RAGService
@@ -18,10 +18,9 @@ class AIEngine:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             print("⚠️ Cảnh báo: Chưa có GOOGLE_API_KEY")
-            self.model = None
+            self.client = None
         else:
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.client = genai.Client(api_key=api_key)
         
         # Khởi tạo RAG
         self.rag = RAGService()
@@ -64,7 +63,7 @@ class AIEngine:
         return rich_query
 
     def generate_report(self, data: DailyReportInput) -> str:
-        if not self.model:
+        if not self.client:
             return "Lỗi: Chưa cấu hình API Key."
 
         # 1. Tạo Rich Query (Thay vì query ngắn cũn)
@@ -126,7 +125,10 @@ class AIEngine:
 
         # 4. Gọi Gemini
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model='models/gemini-2.5-flash',
+                contents=prompt,
+            )
             return response.text
         except Exception as e:
             return f"Lỗi khi gọi Gemini: {str(e)}"

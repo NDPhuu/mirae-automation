@@ -8,7 +8,8 @@ import threading
 import paho.mqtt.client as mqtt
 import warnings
 import urllib3
-from datetime import datetime
+import gc
+from datetime import datetime, time as dt_time
 
 # Tắt các cảnh báo không quan trọng từ thư viện bên thứ 3
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -171,12 +172,22 @@ def start_ssi_signalr_stream():
     except Exception as e:
         print(f"❌ Khởi tạo SSI Stream thất bại: {e}")
 
-def initial_seed_data(symbols_list):
+# Khóa bảo vệ để tránh việc chạy chồng chéo (Race Condition) khi tải dữ liệu SSI
+# SSI chỉ cho phép 1 req/sec, nếu 2 luồng cùng chạy sẽ gây lỗi 429 hàng loạt.
+INGESTION_LOCK = threading.Lock()
+
+def initial_seed_data(symbols_list, force_tier2=False):
     """
-    Fetches the static EOD state from DNSE & SSI ONCE at startup to populate SQLite.
-    This guarantees data is fully available for formatting even if the stream is quiet (e.g. weekends).
+    Fetches the static EOD state from DNSE & SSI.
+    - startup: Only Tier 1 (VN30) for speed.
+    - EOD Scheduler: Full Tier 2.
     """
-    print("⏳ Đang tải dữ liệu tĩnh (Lịch sử) lần đầu để nạp Cache...")
+    if INGESTION_LOCK.locked():
+        print("⚠️ [Ingestion] Đang có một luồng dữ liệu đang chạy. Bỏ qua lượt này.")
+        return
+
+    with INGESTION_LOCK:
+        print(f"⏳ Đang tải dữ liệu tĩnh (Force Tier 2: {force_tier2})...")
     
     # 1. Quét DNSE lấy giá, volume, shares, VNINDEX (FAST - DONE IN SECONDS)
     dnse = DNSEService()
@@ -232,63 +243,8 @@ def initial_seed_data(symbols_list):
     else:
         print(f"❌ [CACHE] KHÔNG TÌM THẤY FILE: {cache_path}. Top Impact sẽ bị trống!")
 
-    # 3. Quét SSI lấy Foreign Trading + SEC Details (OPTIMIZED)
-    def ssi_background_fetch():
-        now = datetime.now()
-        # SKIP: Nếu đang trong giờ giao dịch và đã có dữ liệu cache (EOD SSI không đổi trong ngày)
-        # Chỉ Force-run nếu là sáng sớm (1h-8h) hoặc sau phiên (16h-23h)
-        is_trading_hours = 9 <= now.hour < 16
-        
-        print(f"⏳ [SSI] Bắt đầu kiểm tra Dữ liệu Khối ngoại (Time: {now.strftime('%H:%M')})...")
-        
-        ssi = SSIService()
-        if ssi.login():
-            # Tối ưu: Lấy danh sách mã ưu tiên (VN30 + High Impact)
-            # Giả định VN30 + mã cốt lõi (~50 mã)
-            vn30 = ["ACB","BCM","BID","BVH","CTG","FPT","GAS","GVR","HDB","HPG","MBB","MSN","MWG","PLX","POW","SAB","SHB","SSB","SSI","STB","TCB","TPB","VCB","VHM","VIC","VJC","VNM","VPB","VRE"]
-            
-            # Phase 1: Tier 1 (VN30 - Instant update)
-            print("🚀 [SSI] Tier 1: Ưu tiên VN30...")
-            f_data_tier1 = ssi.get_batch_foreign_data(vn30)
-            for sym, d in f_data_tier1.items():
-                db.upsert_stock(sym, {
-                    "f_buy_val": d.get('f_buy_val', 0.0),
-                    "f_sell_val": d.get('f_sell_val', 0.0)
-                }, trading_date=d.get("trading_date"))
-            
-            # Phase 2: Tier 2 (Phần còn lại - Skip nếu đang trong giờ giao dịch)
-            # Removed the blind `is_trading_hours` return here because if the server restarts during trading hours,
-            # Tier 2 data will be missing entirely until 16:00. This caused missing MCH, BSR, etc.
-            if is_trading_hours:
-                print("⏭️ [SSI] Đang giờ giao dịch. Vẫn tiến hành tải Tier 2 để đảm bảo không bị thiếu dữ liệu do restart.")
-
-            print("⏳ [SSI] Tier 2: Đang tải nốt phần còn lại của thị trường...")
-            remaining_symbols = [s for s in symbols_list if s not in vn30]
-            
-            from src.cache.state import SYSTEM_STATUS
-            SYSTEM_STATUS["state"] = "SYNCING"
-            SYSTEM_STATUS["message"] = "Đang tải dữ liệu tĩnh..."
-            
-            def ssi_progress(current, total):
-                SYSTEM_STATUS["progress"] = current
-                SYSTEM_STATUS["total"] = total
-                SYSTEM_STATUS["message"] = f"Đang đồng bộ dữ liệu Khối Ngoại ({current}/{total})..."
-                
-            f_data_tier2 = ssi.get_batch_foreign_data(remaining_symbols, progress_callback=ssi_progress)
-            
-            SYSTEM_STATUS["state"] = "READY"
-            SYSTEM_STATUS["message"] = "Cập nhật dữ liệu thành công."
-            
-            for sym, d in f_data_tier2.items():
-                db.upsert_stock(sym, {
-                    "f_buy_val": d.get('f_buy_val', 0.0),
-                    "f_sell_val": d.get('f_sell_val', 0.0)
-                }, trading_date=d.get("trading_date"))
-            
-            print(f"✅ [SSI] Đã hoàn thành cập nhật Khối ngoại toàn thị trường.")
-            
-    # Chạy SSI fetch trong thread riêng để không block streamer startup
-    threading.Thread(target=ssi_background_fetch, daemon=True).start()
+    # SSI Foreign Trading is now handled by SyncManager for manual EOD chốt.
+    pass
 
 def start_streams():
     print("========================================")
@@ -314,8 +270,42 @@ def start_streams():
     
     return mqtt_client
 
+def market_curfew_monitor(mqtt_client):
+    """
+    Kiểm tra giờ giới nghiêm (17:30 - 08:00).
+    Nếu rơi vào giờ này, ngắt kết nối toàn bộ để giải phóng RAM trên Render.
+    """
+    is_running = True
+    while True:
+        now = datetime.now().time()
+        start_curfew = dt_time(17, 30)
+        end_curfew = dt_time(8, 0)
+        
+        # Kiểm tra nếu đang trong giờ giới nghiêm
+        if now >= start_curfew or now < end_curfew:
+            if is_running:
+                print(f"🌙 [Curfew] Đã đến giờ giới nghiêm ({now.strftime('%H:%M')}). Ngắt kết nối để giải phóng RAM...")
+                if mqtt_client:
+                    mqtt_client.loop_stop()
+                    mqtt_client.disconnect()
+                
+                # Ép Python dọn rác RAM triệt để
+                gc.collect()
+                is_running = False
+        else:
+            if not is_running:
+                print(f"☀️ [Curfew] Đã hết giờ giới nghiêm ({now.strftime('%H:%M')}). Khởi động lại luồng dữ liệu...")
+                # Restart logic (vì ta chạy trong Docker/Render, thực tế Render có thể tự restart khi thấy code thay đổi hoặc ping)
+                # Ở đây ta chỉ log, vì nếu là Render, ta nên để nó tự Restart hoặc dùng check_health
+                is_running = True
+        
+        time.sleep(60) # Kiểm tra mỗi phút
+
 def main():
     mqtt_client = start_streams()
+    # Chạy monitor thread để quản lý RAM
+    threading.Thread(target=market_curfew_monitor, args=(mqtt_client,), daemon=True).start()
+    
     try:
         while True:
             time.sleep(1)

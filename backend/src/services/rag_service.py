@@ -4,7 +4,7 @@ import glob
 import shutil
 import time
 # Thay đổi thư viện import
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from dotenv import load_dotenv
@@ -17,12 +17,14 @@ class RAGService:
         self.db_dir = db_dir
         self.vector_db = None # Chưa kết nối vội
         
-        print("📥 Đang tải Model BGE-M3 (Chạy trên CPU)...")
-        # Cấu hình chạy CPU
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-m3",
-            model_kwargs={'device': 'cpu'}, 
-            encode_kwargs={'normalize_embeddings': True}
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY environment variable not set.")
+
+        print("📥 Đang tải Model Google Generative AI (embedding-001)...")
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001", 
+            google_api_key=api_key
         )
 
     def _get_db(self):

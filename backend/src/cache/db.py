@@ -36,27 +36,39 @@ def upsert_index(symbol: str, data: dict):
             _index_buffer[symbol] = {}
         _index_buffer[symbol].update(data)
 
-def upsert_stock(symbol: str, data: dict, trading_date: str = None):
+def upsert_stock(symbol: str, data: dict, trading_date: str = None, immediate: bool = False):
     with _buffer_lock:
         if symbol not in _stock_buffer:
             _stock_buffer[symbol] = {}
         if trading_date:
             data["_explicit_date"] = trading_date
-        _stock_buffer[symbol].update(data)
+            
+        # Normalize keys to lowercase for consistency
+        normalized_data = {k.lower(): v for k, v in data.items()}
+        
+        # Robustly map common SSI SDK variants (PascalCase, lower, and standard)
+        for pas_key, std_key in [('ForeignBuyValTotal', 'f_buy_val'), ('ForeignSellValTotal', 'f_sell_val')]:
+            # Check raw 'data' for PascalCase first, then check 'normalized_data' for lowercase
+            val = data.get(pas_key) or normalized_data.get(pas_key.lower())
+            if val is not None:
+                normalized_data[std_key] = val
+            
+        _stock_buffer[symbol].update(normalized_data)
+    
+    if immediate:
+        flush_buffers()
 
 def flush_buffers():
     if not engine:
         return
         
+    indexes_to_flush = {}
+    stocks_to_flush = {}
+    
     with _buffer_lock:
         if not _index_buffer and not _stock_buffer:
             return
-        
-        indexes_to_flush = _index_buffer.copy()
         stocks_to_flush = _stock_buffer.copy()
-        
-        _index_buffer.clear()
-        _stock_buffer.clear()
         
     current_date = date.today().isoformat()
     updated_at = datetime.now()
@@ -137,13 +149,13 @@ def flush_buffers():
                         })
                         
                     # Foreign Trading
-                    if any(k in data for k in ["f_buy_val", "f_sell_val"]):
+                    if 'f_buy_val' in data or 'f_sell_val' in data:
                         ft_params.append({
                             "symbol": sym,
                             "trading_date": target_date,
-                            "f_buy_val": data.get("f_buy_val"),
-                            "f_sell_val": data.get("f_sell_val"),
-                            "updated_at": updated_at
+                            "f_buy_val": data.get("f_buy_val", 0.0),
+                            "f_sell_val": data.get("f_sell_val", 0.0),
+                            "updated_at": datetime.now()
                         })
                 
                 if st_params:
@@ -186,13 +198,34 @@ def flush_buffers():
                         INSERT INTO foreign_trading (symbol, trading_date, f_buy_val, f_sell_val, updated_at)
                         VALUES (:symbol, :trading_date, :f_buy_val, :f_sell_val, :updated_at)
                         ON CONFLICT (symbol, trading_date) DO UPDATE SET
-                            f_buy_val=COALESCE(EXCLUDED.f_buy_val, foreign_trading.f_buy_val),
-                            f_sell_val=COALESCE(EXCLUDED.f_sell_val, foreign_trading.f_sell_val),
+                            f_buy_val=EXCLUDED.f_buy_val,
+                            f_sell_val=EXCLUDED.f_sell_val,
                             updated_at=EXCLUDED.updated_at
                     """)
                     conn.execute(ft_query, ft_params)
+                
+                # IMPORTANT: Explicitly commit for connect() blocks if not using begin()
+                # though engine.begin() should handle it, some environments or poolers (Supabase) 
+                # might need explicit commit or flush.
+                conn.commit()
+            
+            # 3. Clear only after successful commit
+            with _buffer_lock:
+                for sym in indexes_to_flush:
+                    if sym in _index_buffer: del _index_buffer[sym]
+                for sym in stocks_to_flush:
+                    if sym in _stock_buffer: del _stock_buffer[sym]
+                    
     except Exception as e:
         print(f"⚠️ [DB Cache] Error flushing to DB: {e}")
+        # Restore buffers on failure to prevent data loss
+        with _buffer_lock:
+            for sym, data in indexes_to_flush.items():
+                if sym not in _index_buffer: _index_buffer[sym] = {}
+                _index_buffer[sym].update(data)
+            for sym, data in stocks_to_flush.items():
+                if sym not in _stock_buffer: _stock_buffer[sym] = {}
+                _stock_buffer[sym].update(data)
 
 def init_db():
     start_flusher()

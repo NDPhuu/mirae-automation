@@ -82,13 +82,25 @@ class SSIService:
             response = requests.get(url, headers=self._get_headers(), params=params, timeout=5)
             if response.status_code == 200:
                 resp_json = response.json()
-                # API trả về key "data" (không phải "dataList")
                 data_list = resp_json.get("data") or resp_json.get("dataList") or []
                 if data_list:
-                    # Dữ liệu sắp xếp theo ngày giảm dần → phần tử đầu tiên là phiên gần nhất
+                    # Sort by date descending to get the latest session first.
+                    # Date format from SSI is usually DD/MM/YYYY
+                    try:
+                       data_list.sort(key=lambda x: datetime.strptime(x.get("TradingDate") or x.get("tradingdate"), "%d/%m/%Y"), reverse=True)
+                    except:
+                       pass
                     return data_list[0]
+            elif response.status_code == 429:
+                print(f"⚠️ SSI Rate Limit (429) khi tải {symbol}. Thử lại sau...")
+            elif response.status_code == 401:
+                print(f"⚠️ SSI Token hết hạn (401). Đang đăng nhập lại...")
+                self.access_token = None # Để lần sau tự login lại
+            else:
+                pass # Các lỗi 404, 500 khác không cần in log quá nhiều
             return None
-        except Exception:
+        except Exception as e:
+            # print(f"⚠️ SSI Request Error cho {symbol}: {e}")
             return None
 
     def get_batch_foreign_data(self, symbols: List[str], progress_callback=None) -> Dict[str, dict]:

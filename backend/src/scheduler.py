@@ -3,16 +3,18 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import text
 from src.database import engine
 from src.workers.market_streamer import initial_seed_data
+from src.services.sync_manager import sync_manager
 from src.config import SECTOR_MAPPING
 
-def poll_market_data():
+# poll_market_data job was removed in favor of manual Sync v2
+async def auto_sync_market_data():
     all_symbols = []
     for symbols in SECTOR_MAPPING.values():
         all_symbols.extend(symbols)
     all_symbols = list(set(all_symbols))
     
-    print("🔄 [Scheduler] Chạy cron job: Lấy dữ liệu DNSE/SSI...")
-    initial_seed_data(all_symbols)
+    print("🔄 [Scheduler] Tự động nạp dữ liệu EOD lúc 15:05...")
+    await sync_manager.start_eod_sync(all_symbols)
 
 import os
 import pandas as pd
@@ -81,22 +83,16 @@ def cleanup_old_data():
 def start_scheduler():
     scheduler = BackgroundScheduler()
     
-    # 1. Job Ingestion: Mỗi 1 phút trong giờ hành chính (T2-T6, 9h-15h)
+    # 1. Tự động nạp EOD lúc 15:05 để Analyst không phải chờ khi bấm nút.
     scheduler.add_job(
-        poll_market_data,
-        CronTrigger(day_of_week='mon-fri', hour='9-15', minute='*'),
-        id='poll_market_data_job',
+        auto_sync_market_data,
+        CronTrigger(day_of_week='mon-fri', hour='15', minute='5'),
+        id='auto_sync_market_data_job',
         replace_existing=True
     )
     
-    # 2. Job Cleanup: 23:00 hằng ngày
-    scheduler.add_job(
-        cleanup_old_data,
-        CronTrigger(hour='23', minute='0'),
-        id='cleanup_old_data_job',
-        replace_existing=True
-    )
+    # Job cleanup_old_data_job removed - now triggered manually by Admin API
     
     scheduler.start()
-    print("⏳ [Scheduler] APScheduler đã khởi động (Ingestion: 1 phút/lần 9-15h, Cleanup: 23h).")
+    print("⏳ [Scheduler] APScheduler đã khởi động (AutoSync: 15:05).")
     return scheduler
