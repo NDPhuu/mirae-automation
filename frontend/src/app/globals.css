@@ -2,17 +2,26 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-background: #0a0a0a;
-  --color-foreground: #ededed;
+  --color-background: #000000;
+  --color-foreground: #ffffff;
   
-  --color-market-up: #00d26a;
-  --color-market-down: #fc5757;
+  --color-brand: #f97316; /* Orange-500 for Identity */
+  --color-brand-hover: #fb923c; /* Orange-400 */
+  
+  --color-market-up: #00d26a; /* Restored Green */
+  --color-market-down: #fc5757; /* Restored Red */
   --color-market-ref: #f7ca49;
   --color-market-ceil: #c018df;
   --color-market-floor: #29c1c9;
 
   --color-panel: #141414;
   --color-panel-border: #262626;
+
+  /* Glassmorphism Tokens */
+  --color-glass: rgba(255, 255, 255, 0.05);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --blur-glass: 16px;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -42,3 +51,9 @@ body {
   background-color: #3f3f46;
   border-radius: 10px;
 }
+/* Force Market Colors to prevent theme overlaps */
+.text-market-up { color: #00d26a !important; }
+.bg-market-up { background-color: #00d26a !important; }
+
+.text-market-down { color: #fc5757 !important; }
+.bg-market-down { background-color: #fc5757 !important; }

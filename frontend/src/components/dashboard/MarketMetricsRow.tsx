@@ -1,13 +1,14 @@
 "use client";
 
-import { useMarketOverview, useForeignTrading } from "@/hooks/useMarketData";
-import { ArrowUpRight, ArrowDownRight, Activity, BarChart2, TrendingUp, Globe } from "lucide-react";
+import { useMarketOverview, useForeignTrading, usePollingControl, isMarketOpen } from "@/hooks/useMarketData";
+import { ArrowUpRight, ArrowDownRight, Activity, BarChart2, TrendingUp, Globe, Zap, ZapOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/ui/error-card";
 
 export default function MarketMetricsRow() {
   const overview = useMarketOverview();
   const foreign = useForeignTrading();
+  const { isLive, toggleLive } = usePollingControl();
 
   if (overview.error || foreign.error) return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -30,6 +31,7 @@ export default function MarketMetricsRow() {
 
   const data = overview.data;
   const isUp = (data.change_point ?? 0) >= 0;
+  const marketOpen = isMarketOpen();
 
   // Read True Foreign Net Value globally from backend
   const f_net = foreign.data.total_net_val;
@@ -45,7 +47,22 @@ export default function MarketMetricsRow() {
             <Activity className="w-4 h-4 text-zinc-500" />
             {data.symbol}
           </h2>
-          <span className="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded-full">{data.trading_date}</span>
+          <div className="flex items-center gap-3">
+             {/* Live Mode Toggle */}
+             <button 
+                onClick={toggleLive}
+                title={isLive ? "Tắt Live Mode (Về tự động)" : "Bật Live Mode (Ép cập nhật)"}
+                className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all border ${
+                  isLive 
+                  ? 'bg-brand/10 text-brand border-brand/20' 
+                  : (marketOpen ? 'bg-market-up/10 text-market-up border-market-up/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700 opacity-60')
+                }`}
+             >
+                <span className={`w-1.5 h-1.5 rounded-full ${(isLive || marketOpen) ? 'bg-current animate-pulse' : 'bg-zinc-600'}`} />
+                {isLive ? 'LIVE FORCED' : (marketOpen ? 'AUTO LIVE' : 'OFF-HOURS')}
+             </button>
+             <span className="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded-full">{data.trading_date}</span>
+          </div>
         </div>
         <div className="flex items-end justify-between">
           <span className={`text-3xl font-extrabold tabular-nums tracking-tighter ${isUp ? 'text-market-up' : 'text-market-down'}`}>
@@ -109,7 +126,7 @@ export default function MarketMetricsRow() {
           <span className="text-sm text-zinc-500 font-medium">Tỷ VNĐ</span>
         </div>
         <div className="mt-1 flex justify-between">
-          <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded-sm ${isForeignBuy ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+          <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded-sm ${isForeignBuy ? 'bg-market-up/20 text-market-up' : 'bg-market-down/20 text-market-down'}`}>
             {isForeignBuy ? 'Mua ròng' : 'Bán ròng'}
           </span>
         </div>

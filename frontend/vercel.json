@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://mirae-automation-backend.onrender.com/api/:path*"
+    }
+  ]
+}
