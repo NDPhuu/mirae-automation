@@ -107,10 +107,11 @@ class SyncManager:
                         
                         if buy > 0 or sell > 0:
                             db.upsert_stock(sym, {"f_buy_val": buy, "f_sell_val": sell}, trading_date=target_date, immediate=True)
+                            print(f"✅ [Sync] {sym}: Buy={buy}, Sell={sell} ({target_date})")
+                        else:
+                            print(f"ℹ️ [Sync] {sym}: No foreign activity on {target_date}")
                     else:
-                        # Consider missing as zero activity or error?
-                        # Using 10-day range usually returns data if active.
-                        pass
+                        print(f"⚠️ [Sync] {sym}: SSI returned no data")
                 except Exception as e:
                     self.active_task["failed"] += 1
                     self.active_task["failed_symbols"].append(sym)

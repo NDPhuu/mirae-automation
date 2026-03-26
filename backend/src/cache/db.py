@@ -68,6 +68,7 @@ def flush_buffers():
     with _buffer_lock:
         if not _index_buffer and not _stock_buffer:
             return
+        indexes_to_flush = _index_buffer.copy()
         stocks_to_flush = _stock_buffer.copy()
         
     current_date = date.today().isoformat()

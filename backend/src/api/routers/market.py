@@ -41,34 +41,24 @@ def get_active_session_date(db: Session):
     now = datetime.now()
     today = now.date().isoformat()
     
-    # 1. Tìm ngày gần nhất có dữ liệu (Check cả 2 bảng để tránh lỗi khi 1 bên đang nạp dở)
-    latest_query = text("""
-        SELECT MAX(trading_date) FROM (
-            SELECT trading_date FROM market_prices WHERE trading_date < :today
-            UNION ALL
-            SELECT trading_date FROM foreign_trading WHERE trading_date < :today
-        ) AS combined_dates
-    """)
-    last_date = db.execute(latest_query, {"today": today}).scalar()
+    # 1. Tìm ngày gần nhất có dữ liệu giá (Chính)
+    latest_price_query = text("SELECT MAX(trading_date) FROM market_prices WHERE trading_date <= :today")
+    last_price_date = db.execute(latest_price_query, {"today": today}).scalar()
     
-    # Nếu đang trước 9:15 AM -> Force dùng phiên cũ gần nhất
+    # 2. Tìm ngày gần nhất có dữ liệu Foreign (Có thể trễ hơn Price)
+    latest_ft_query = text("SELECT MAX(trading_date) FROM foreign_trading WHERE trading_date <= :today")
+    last_ft_date = db.execute(latest_ft_query, {"today": today}).scalar()
+
+    # Nếu đang trước 09:15 AM -> Dùng phiên đóng cửa hôm trước
     if now.hour < 9 or (now.hour == 9 and now.minute < 15):
-        return last_date or today
+        # Lùi lại 1 ngày so với ngày mới nhất có data nếu ngày đó là today
+        if last_price_date == today:
+             prev_query = text("SELECT MAX(trading_date) FROM market_prices WHERE trading_date < :today")
+             return db.execute(prev_query, {"today": today}).scalar() or today
+        return last_price_date or today
         
-    # 2. Sau 9:15 AM -> Check xem phiên hôm nay đã có data chưa (Trường hợp sync Foreign trước Price)
-    ft_query = text("""
-        SELECT (
-            SELECT COUNT(*) FROM market_prices WHERE trading_date = :today AND price > 0
-        ) + (
-            SELECT COUNT(*) FROM foreign_trading WHERE trading_date = :today
-        )
-    """)
-    total_count = db.execute(ft_query, {"today": today}).scalar()
-    
-    if total_count > 10: 
-        return today
-    else:
-        return last_date or today
+    # Sau 09:15 AM -> Ưu tiên ngày mới nhất có data giá
+    return last_price_date or last_ft_date or today
 
 @router.get("/top-impact", response_model=TopImpactResponse)
 def get_top_impact(limit: int = 10, db: Session = Depends(get_db)):
@@ -99,13 +89,13 @@ def get_foreign_trading(limit: int = 10, db: Session = Depends(get_db)):
     top_buy = db.query(ForeignTrading).filter(ForeignTrading.trading_date == active_date).order_by(desc(ForeignTrading.net_val)).limit(limit).all()
     top_sell = db.query(ForeignTrading).filter(ForeignTrading.trading_date == active_date).order_by(asc(ForeignTrading.net_val)).limit(limit).all()
     
-    b = db.execute(text("SELECT SUM(f_buy_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0.0
-    s = db.execute(text("SELECT SUM(f_sell_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0.0
+    b = float(db.execute(text("SELECT SUM(f_buy_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0)
+    s = float(db.execute(text("SELECT SUM(f_sell_val) FROM foreign_trading WHERE trading_date = :d"), {"d": active_date}).scalar() or 0)
     
     return {
         "top_buy": top_buy,
         "top_sell": top_sell,
-        "total_net_val": float(b - s)
+        "total_net_val": b - s
     }
 
 @router.get("/sector-performance", response_model=SectorPerformanceResponse)
@@ -123,6 +113,9 @@ async def trigger_sync_eod():
         all_symbols.extend(symbols)
     all_symbols = list(set(all_symbols))
     
+    result = await sync_manager.start_eod_sync(all_symbols)
+    return result
+
 @router.get("/sync-status")
 async def get_sync_status():
     """Lấy trạng thái tiến độ đồng bộ SSI hiện tại."""

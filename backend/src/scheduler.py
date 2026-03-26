@@ -1,4 +1,4 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import text
 from src.database import engine
@@ -81,7 +81,7 @@ def cleanup_old_data():
         print(f"❌ [Scheduler] Lỗi trong quá trình Archive/Delete: {e}")
 
 def start_scheduler():
-    scheduler = BackgroundScheduler()
+    scheduler = AsyncIOScheduler()
     
     # 1. Tự động nạp EOD lúc 15:05 để Analyst không phải chờ khi bấm nút.
     scheduler.add_job(
