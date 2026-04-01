@@ -34,6 +34,7 @@ urllib3 = "<2.0.0"
 protobuf = "3.20.3"
 torch = {version = "^2.2.0", source = "pytorch-cpu"}
 google-genai = "^1.68.0"
+pdfplumber = "^0.11.9"
 
 [[tool.poetry.source]]
 name = "pytorch-cpu"

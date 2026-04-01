@@ -78,8 +78,8 @@ class RAGService:
         print(f"🚀 Đang Vector hóa {len(documents)} tài liệu bằng GPU (RTX 3050)...")
         
         # 3. Bây giờ mới khởi tạo DB mới và nạp dữ liệu
-        # Batch size lớn hơn chút vì có GPU
-        batch_size = 50 
+        # Batch size rất nhỏ và sleep lâu để tránh lỗi Quota 429 cực gắt
+        batch_size = 5 
         
         # Khởi tạo Chroma mới
         temp_db = Chroma(
@@ -90,8 +90,30 @@ class RAGService:
         total_docs = len(documents)
         for i in range(0, total_docs, batch_size):
             batch = documents[i:i+batch_size]
-            temp_db.add_documents(batch)
-            print(f"   -> Đã xử lý {min(i + batch_size, total_docs)}/{total_docs} file...")
+            success = False
+            retries = 0
+            max_retries = 5
+            
+            while not success and retries < max_retries:
+                try:
+                    temp_db.add_documents(batch)
+                    print(f"   -> Đã xử lý {min(i + batch_size, total_docs)}/{total_docs} file...")
+                    success = True
+                    if i + batch_size < total_docs:
+                        time.sleep(10)  # Nghỉ 10s giữa các batch
+                except Exception as e:
+                    retries += 1
+                    wait_time = 30 * retries
+                    print(f"⚠️ Lỗi tại batch {i} (Lần thử {retries}/{max_retries}): {e}")
+                    if retries < max_retries:
+                        print(f"🔄 Đang thử lại sau {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"❌ Đã hết lượt thử lại cho batch {i}. Dừng lại tại đây.")
+                        return
+
+        print("✅ Đã nạp xong toàn bộ dữ liệu vào RAG Local!")
+        self.vector_db = temp_db # Lưu lại kết nối
 
         print("✅ Đã nạp xong dữ liệu vào RAG Local!")
         self.vector_db = temp_db # Lưu lại kết nối
