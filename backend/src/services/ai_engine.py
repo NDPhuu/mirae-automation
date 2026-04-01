@@ -13,17 +13,35 @@ from src.config import REPORT_PROMPT_TEMPLATE
 
 load_dotenv()
 
+import threading
+
 class AIEngine:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(AIEngine, cls).__new__(cls)
+                cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            print("⚠️ Cảnh báo: Chưa có GOOGLE_API_KEY")
-            self.client = None
-        else:
-            self.client = genai.Client(api_key=api_key)
-        
-        # Khởi tạo RAG
-        self.rag = RAGService()
+        with self._lock:
+            if self._initialized: 
+                return
+            
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                print("⚠️ Cảnh báo: Chưa có GOOGLE_API_KEY")
+                self.client = None
+            else:
+                self.client = genai.Client(api_key=api_key)
+            
+            # Khởi tạo RAG
+            self.rag = RAGService()
+            
+            self._initialized = True
 
     def _build_rich_query(self, data: DailyReportInput) -> str:
         """

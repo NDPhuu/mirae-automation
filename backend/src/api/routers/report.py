@@ -30,42 +30,16 @@ async def generate_report(request: Request, payload: ReportGenerateRequest, db: 
     t_date = index_row.trading_date
     f_date = db.execute(text("SELECT MAX(trading_date) FROM foreign_trading")).scalar() or t_date
 
-    # Thread-safe helper functions for concurrent DB fetching
-    def _fetch_pos():
-        with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT symbol, change_percent FROM impact_metrics WHERE trading_date = :d ORDER BY impact_value DESC LIMIT 3"), {"d": t_date}).fetchall()
+    # 2. Execute Independent Queries Sequentially (Fast enough to avoid pool exhaustion)
+    pos_rows = db.execute(text("SELECT symbol, change_percent FROM impact_metrics WHERE trading_date = :d ORDER BY impact_value DESC LIMIT 3"), {"d": t_date}).fetchall()
+    neg_rows = db.execute(text("SELECT symbol, change_percent FROM impact_metrics WHERE trading_date = :d ORDER BY impact_value ASC LIMIT 3"), {"d": t_date}).fetchall()
+    sector_rows = db.execute(text("SELECT sector, avg_change, total_stocks, top_symbols FROM sector_performance_metrics WHERE trading_date = :d ORDER BY avg_change DESC"), {"d": t_date}).fetchall()
     
-    def _fetch_neg():
-        with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT symbol, change_percent FROM impact_metrics WHERE trading_date = :d ORDER BY impact_value ASC LIMIT 3"), {"d": t_date}).fetchall()
+    f_total_buy = db.execute(text("SELECT SUM(f_buy_val) FROM foreign_trading WHERE trading_date = :d"), {"d": f_date}).scalar() or 0.0
+    f_total_sell = db.execute(text("SELECT SUM(f_sell_val) FROM foreign_trading WHERE trading_date = :d"), {"d": f_date}).scalar() or 0.0
     
-    def _fetch_sectors():
-        with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT sector, avg_change, total_stocks, top_symbols FROM sector_performance_metrics WHERE trading_date = :d ORDER BY avg_change DESC"), {"d": t_date}).fetchall()
-            
-    def _fetch_foreign_totals():
-        with SessionLocal() as local_db:
-            b = local_db.execute(text("SELECT SUM(f_buy_val) FROM foreign_trading WHERE trading_date = :d"), {"d": f_date}).scalar() or 0.0
-            s = local_db.execute(text("SELECT SUM(f_sell_val) FROM foreign_trading WHERE trading_date = :d"), {"d": f_date}).scalar() or 0.0
-            return b, s
-            
-    def _fetch_top_buy():
-        with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT symbol, net_val FROM foreign_trading WHERE trading_date = :d AND net_val > 0 ORDER BY net_val DESC LIMIT 3"), {"d": f_date}).fetchall()
-            
-    def _fetch_top_sell():
-        with SessionLocal() as local_db:
-            return local_db.execute(text("SELECT symbol, net_val FROM foreign_trading WHERE trading_date = :d AND net_val < 0 ORDER BY net_val ASC LIMIT 3"), {"d": f_date}).fetchall()
-
-    # 2. Execute Independent Queries Concurrently
-    pos_rows, neg_rows, sector_rows, (f_total_buy, f_total_sell), top_buy_rows, top_sell_rows = await asyncio.gather(
-        asyncio.to_thread(_fetch_pos),
-        asyncio.to_thread(_fetch_neg),
-        asyncio.to_thread(_fetch_sectors),
-        asyncio.to_thread(_fetch_foreign_totals),
-        asyncio.to_thread(_fetch_top_buy),
-        asyncio.to_thread(_fetch_top_sell)
-    )
+    top_buy_rows = db.execute(text("SELECT symbol, net_val FROM foreign_trading WHERE trading_date = :d AND net_val > 0 ORDER BY net_val DESC LIMIT 3"), {"d": f_date}).fetchall()
+    top_sell_rows = db.execute(text("SELECT symbol, net_val FROM foreign_trading WHERE trading_date = :d AND net_val < 0 ORDER BY net_val ASC LIMIT 3"), {"d": f_date}).fetchall()
 
     impact_pos = [f"{r.symbol} (+{r.change_percent}%)" for r in pos_rows]
     impact_neg = [f"{r.symbol} ({r.change_percent}%)" for r in neg_rows]
