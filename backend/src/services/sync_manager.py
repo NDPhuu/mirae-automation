@@ -88,7 +88,8 @@ class SyncManager:
 
             async with self.semaphore:
                 try:
-                    data = self.ssi.get_daily_stock_price(sym)
+                    # Make blocking HTTP request inside a thread pool
+                    data = await asyncio.to_thread(self.ssi.get_daily_stock_price, sym)
                     if data:
                         # Robust key extraction (Case-insensitive)
                         buy = float(data.get("ForeignBuyValTotal") or data.get("foreignbuyvaltotal") or data.get("f_buy_val") or 0)
@@ -106,7 +107,9 @@ class SyncManager:
                         target_date = iso_date if iso_date else task_id.replace("sync-", "")
                         
                         if buy > 0 or sell > 0:
-                            db.upsert_stock(sym, {"f_buy_val": buy, "f_sell_val": sell}, trading_date=target_date, immediate=True)
+                            # MUST NOT USE immediate=True in an async loop! It will do a synchronous DB flush and block the event loop.
+                            # Using immediate=False allows the background flusher thread to batch insert data.
+                            db.upsert_stock(sym, {"f_buy_val": buy, "f_sell_val": sell}, trading_date=target_date, immediate=False)
                             print(f"✅ [Sync] {sym}: Buy={buy}, Sell={sell} ({target_date})")
                         else:
                             print(f"ℹ️ [Sync] {sym}: No foreign activity on {target_date}")
@@ -128,6 +131,9 @@ class SyncManager:
 
                 # Chờ 1.05s để lách Rate Limit
                 await asyncio.sleep(1.05)
+                
+        # Final flush to guarantee all data is written to DB before marking complete
+        await asyncio.to_thread(db.flush_buffers)
 
         self.active_task["status"] = "completed"
         self.active_task["finished_at"] = datetime.now().isoformat()
