@@ -72,7 +72,7 @@ def get_api_key(api_key: str = Security(api_key_header)):
 app.include_router(market.router, dependencies=[Depends(get_api_key)])
 app.include_router(report.router, dependencies=[Depends(get_api_key)])
 
-@app.get("/health", tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["System"])
 def health_check():
     """Endpoint for load balancers and deployment verification."""
     return {"status": "ok"}
