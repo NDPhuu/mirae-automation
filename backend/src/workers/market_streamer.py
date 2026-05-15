@@ -129,8 +129,12 @@ class SSIConfig:
 
 def start_ssi_signalr_stream():
     """Uses SignalR via ssi_fc_data to stream real-time Foreign trading data."""
-    from ssi_fc_data.fc_md_client import MarketDataClient
-    from ssi_fc_data.fc_md_stream import MarketDataStream
+    try:
+        from ssi_fc_data.fc_md_client import MarketDataClient
+        from ssi_fc_data.fc_md_stream import MarketDataStream
+    except ImportError:
+        print("⚠️ [SSI Stream] ssi_fc_data SDK not installed. SignalR stream disabled (using REST fallback).")
+        return
     
     config = SSIConfig()
     if not config.consumerID or not config.consumerSecret:
@@ -171,6 +175,7 @@ def start_ssi_signalr_stream():
         stream.start(on_message, on_error, "R:ALL")
     except Exception as e:
         print(f"❌ Khởi tạo SSI Stream thất bại: {e}")
+
 
 # Khóa bảo vệ để tránh việc chạy chồng chéo (Race Condition) khi tải dữ liệu SSI
 # SSI chỉ cho phép 1 req/sec, nếu 2 luồng cùng chạy sẽ gây lỗi 429 hàng loạt.
